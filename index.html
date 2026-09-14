@@ -1012,7 +1012,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 </div>
 
 <script type="module">
-import { getSession, signUp, signIn, signOut, getProfile, updateProfile } from './js/auth.js';
+import { getSession, signUp, signIn, signOut, getProfile, updateProfile, ensureProfile } from './js/auth.js';
 import { supabase } from './js/supabaseClient.js';
 import * as api from './js/api.js';
 /* =========================================================
@@ -2231,6 +2231,15 @@ async function boot(){
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appShell').style.display = 'flex';
   try{
+    // A session can exist here without a profiles row yet — e.g. the user
+    // confirmed their e-mail via the link and landed back with a session
+    // Supabase created automatically, bypassing signIn()/signUp() (the only
+    // two places that used to call ensureProfile). Always ensure it first.
+    const meta = session.user.user_metadata || {};
+    await ensureProfile(session.user.id, {
+      username: meta.username || (session.user.email.split('@')[0] + '.' + session.user.id.slice(0, 4)),
+      display_name: meta.display_name || session.user.email.split('@')[0]
+    });
     await loadAppData(session.user.id);
     renderAll();
   }catch(err){
