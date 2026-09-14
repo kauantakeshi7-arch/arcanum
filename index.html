@@ -218,12 +218,17 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 }
 .story{display:flex; flex-direction:column; align-items:center; gap:6px; flex-shrink:0; width:60px;}
 .story-ring{
-  width:56px; height:56px; border-radius:50%;
+  width:56px; height:56px; border-radius:50%; position:relative;
   padding:2.5px;
   background:conic-gradient(from 210deg, var(--gold), var(--violet), var(--emerald), var(--gold));
   display:flex; align-items:center; justify-content:center;
   box-shadow:0 0 14px -2px rgba(212,168,83,0.35);
   transition:transform .2s;
+}
+.story-add-badge{
+  position:absolute; bottom:-2px; right:-2px; width:19px; height:19px; border-radius:50%;
+  background:var(--gold-soft); color:#07080C; font-size:13px; font-weight:700; line-height:1;
+  display:flex; align-items:center; justify-content:center; border:2px solid var(--void);
 }
 .story:active .story-ring{transform:scale(0.94);}
 .story-ring.seen{background:var(--panel-3); box-shadow:none;}
@@ -237,6 +242,39 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .story-add .story-ring{background:var(--panel-2); border:1px dashed rgba(212,168,83,0.5); box-shadow:none;}
 .story-add .story-avatar{background:transparent; color:var(--gold-soft); font-size:20px; font-weight:400;}
 .story-name{font-size:10px; color:var(--text-mid); max-width:60px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+/* ---------- STORY VIEWER (fullscreen) ---------- */
+.story-viewer-overlay{
+  position:fixed; inset:0; z-index:200; background:#000;
+  display:flex; flex-direction:column; max-width:480px; margin:0 auto;
+}
+.story-viewer-bars{display:flex; gap:4px; padding:10px 10px 0;}
+.story-bar-track{flex:1; height:2.5px; border-radius:2px; background:rgba(255,255,255,0.25); overflow:hidden;}
+.story-bar-fill{height:100%; width:0%; background:#fff; border-radius:2px;}
+.story-viewer-head{display:flex; align-items:center; gap:10px; padding:12px 14px;}
+.story-viewer-info{flex:1; min-width:0;}
+.story-viewer-name{font-size:13px; font-weight:600; color:#fff;}
+.story-viewer-time{font-size:11px; color:rgba(255,255,255,0.6);}
+.story-viewer-close{width:32px; height:32px; color:#fff; display:flex; align-items:center; justify-content:center;}
+.story-viewer-close svg{width:20px; height:20px;}
+.story-viewer-content{
+  flex:1; min-height:0; display:flex; align-items:center; justify-content:center;
+  position:relative; padding:0 12px 12px;
+}
+.story-viewer-content img{max-width:100%; max-height:100%; object-fit:contain; border-radius:14px;}
+.story-text-card{
+  width:100%; height:100%; border-radius:16px; display:flex; align-items:center; justify-content:center;
+  padding:40px 28px; text-align:center; font-family:var(--font-display); font-size:26px; font-weight:600;
+  color:#fff; line-height:1.4; word-break:break-word;
+}
+.story-viewer-nav{position:absolute; inset:0; display:flex; z-index:1;}
+.story-viewer-nav-zone{flex:1; height:100%;}
+.story-viewer-viewcount{
+  text-align:center; color:rgba(255,255,255,0.75); font-size:12px; padding:0 0 16px;
+}
+.story-type-btn.active{background:rgba(212,168,83,0.14); color:var(--gold-soft); border-color:rgba(212,168,83,0.4);}
+.story-color-swatch{width:32px; height:32px; border-radius:50%; border:2px solid transparent; flex-shrink:0;}
+.story-color-swatch.active{border-color:var(--text-hi);}
 
 /* ---------- SCREENS ---------- */
 .screens{flex:1; min-height:0; position:relative;}
@@ -1340,6 +1378,29 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
     <div class="modal-sheet" id="modalSheet" role="dialog" aria-modal="true" tabindex="-1"></div>
   </div>
 
+  <!-- STORY VIEWER (fullscreen, content injected) -->
+  <div class="story-viewer-overlay" id="storyViewerOverlay" style="display:none" role="dialog" aria-modal="true">
+    <div class="story-viewer-bars" id="storyViewerBars"></div>
+    <div class="story-viewer-head">
+      <div id="storyViewerAvatar"></div>
+      <div class="story-viewer-info">
+        <div class="story-viewer-name" id="storyViewerName"></div>
+        <div class="story-viewer-time" id="storyViewerTime"></div>
+      </div>
+      <button class="story-viewer-close" id="storyViewerClose" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="story-viewer-content" id="storyViewerContent">
+      <div class="story-viewer-nav">
+        <div class="story-viewer-nav-zone" id="storyViewerPrev"></div>
+        <div class="story-viewer-nav-zone" id="storyViewerNext"></div>
+      </div>
+      <div id="storyViewerMedia"></div>
+    </div>
+    <div class="story-viewer-viewcount" id="storyViewerViewCount" style="display:none"></div>
+  </div>
+
 </div>
 
 <!-- MODO DISCRETO: disfarce de calculadora. Três toques no brasão do Arcanum
@@ -1444,6 +1505,8 @@ const state = {
   veilHistory: [],
   veilCategory: 'ervas',
   covenFilter: 'all',
+  storiesByUser: [],
+  storyViewIds: new Set(),
   tarotSpread: null,
   sacredPlaces: [],
   trilhas:[
@@ -1592,15 +1655,215 @@ function setNav(name){
 /* =========================================================
    RENDER: STORIES
    ========================================================= */
+function storyGroupSeen(g){ return g.items.every(it=>state.storyViewIds.has(it.id)); }
 function renderStories(){
-  const names = ['Você','Yara','Firmino','Cinza','Marcus','Inês','Davi','Sol Negra'];
   const el = document.getElementById('storiesRow');
-  el.innerHTML = names.map((n,i)=>{
-    if(i===0){
-      return `<div class="story story-add"><div class="story-ring"><div class="story-avatar">+</div></div><div class="story-name">${n}</div></div>`;
-    }
-    return `<div class="story"><div class="story-ring ${i>4?'seen':''}"><div class="story-avatar">${initials(n)}</div></div><div class="story-name">${n}</div></div>`;
+  if(!el) return;
+  const myGroup = state.storiesByUser.find(g=>g.userId===state.profile.id);
+  const others = state.storiesByUser.filter(g=>g.userId!==state.profile.id)
+    .sort((a,b)=> (storyGroupSeen(a)?1:0) - (storyGroupSeen(b)?1:0));
+
+  let html = myGroup && myGroup.items.length
+    ? `<div class="story" data-action="view-story" data-user="${myGroup.userId}">
+        <div class="story-ring">
+          <div class="story-avatar">${initials(state.profile.display_name)}</div>
+          <button class="story-add-badge" data-action="add-story" aria-label="Adicionar story">+</button>
+        </div>
+        <div class="story-name">Você</div>
+      </div>`
+    : `<div class="story story-add" data-action="add-story"><div class="story-ring"><div class="story-avatar">+</div></div><div class="story-name">Você</div></div>`;
+
+  html += others.map(g=>{
+    const c = tradColor(g.trad);
+    return `<div class="story" data-action="view-story" data-user="${g.userId}">
+      <div class="story-ring ${storyGroupSeen(g)?'seen':''}">
+        <div class="story-avatar" style="background:linear-gradient(155deg, ${c}, ${c}aa); color:#07080C">${initials(g.name)}</div>
+      </div>
+      <div class="story-name">${escapeHtml(g.name)}</div>
+    </div>`;
   }).join('');
+  el.innerHTML = html;
+}
+
+/* ---------------- CRIAR STORY ---------------- */
+function openNewStoryModal(){
+  let mode = 'photo';
+  let photoBlob = null;
+  let selectedColor = '#8B6CF2';
+  const colors = ['#8B6CF2','#34C79A','#D4A853','#C1614A','#3B4A6B'];
+  openModal(`
+    <div class="modal-title">Nova Story</div>
+    <div class="node-sub" style="margin-bottom:14px">Fica visível por 24 horas para a comunidade.</div>
+    <div style="display:flex; gap:8px; margin-bottom:14px">
+      <button class="btn-ghost story-type-btn active" data-storytype="photo" style="flex:1">📷 Foto</button>
+      <button class="btn-ghost story-type-btn" data-storytype="text" style="flex:1">✎ Texto</button>
+    </div>
+    <div id="storyPhotoSection">
+      <button class="btn-ghost" id="btnAddStoryPhoto" style="width:100%; margin-bottom:10px">📷 Escolher foto</button>
+      <input type="file" id="storyPhotoInput" accept="image/*" style="display:none">
+      <div id="storyPhotoPreview"></div>
+    </div>
+    <div id="storyTextSection" style="display:none">
+      <div class="form-field"><textarea id="storyTextInput" placeholder="Escreva algo…" maxlength="180"></textarea></div>
+      <div class="section-sub" style="margin-bottom:8px">Cor de fundo</div>
+      <div id="storyColorRow" style="display:flex; gap:8px; margin-bottom:14px"></div>
+    </div>
+    <button class="btn-primary" style="width:100%" id="btnPublishStory" disabled>Publicar Story</button>
+  `);
+
+  function updatePublishState(){
+    const btn = document.getElementById('btnPublishStory');
+    if(!btn) return;
+    btn.disabled = mode==='photo' ? !photoBlob : !document.getElementById('storyTextInput').value.trim();
+  }
+
+  document.querySelectorAll('.story-type-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      mode = btn.dataset.storytype;
+      document.querySelectorAll('.story-type-btn').forEach(b=>b.classList.toggle('active', b===btn));
+      document.getElementById('storyPhotoSection').style.display = mode==='photo' ? 'block' : 'none';
+      document.getElementById('storyTextSection').style.display = mode==='text' ? 'block' : 'none';
+      updatePublishState();
+    });
+  });
+
+  const fileInput = document.getElementById('storyPhotoInput');
+  document.getElementById('btnAddStoryPhoto').addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', async ()=>{
+    const file = fileInput.files[0];
+    if(!file) return;
+    try{
+      photoBlob = await compressImageToWebP(file);
+      document.getElementById('storyPhotoPreview').innerHTML =
+        `<img src="${URL.createObjectURL(photoBlob)}" alt="" style="width:100%; max-height:220px; object-fit:cover; border-radius:12px; margin-top:4px">`;
+      updatePublishState();
+    }catch(err){ console.error(err); toast('Não foi possível processar essa imagem.'); }
+  });
+
+  const colorRow = document.getElementById('storyColorRow');
+  colorRow.innerHTML = colors.map(c=>`<button class="story-color-swatch ${c===selectedColor?'active':''}" data-color="${c}" style="background:${c}" aria-label="Cor de fundo"></button>`).join('');
+  colorRow.querySelectorAll('[data-color]').forEach(sw=>{
+    sw.addEventListener('click', ()=>{
+      selectedColor = sw.dataset.color;
+      colorRow.querySelectorAll('[data-color]').forEach(s=>s.classList.toggle('active', s===sw));
+    });
+  });
+
+  document.getElementById('storyTextInput').addEventListener('input', updatePublishState);
+
+  document.getElementById('btnPublishStory').addEventListener('click', async (ev)=>{
+    const btn = ev.currentTarget;
+    btn.disabled = true; btn.textContent = 'Publicando…';
+    try{
+      let mediaUrl = null;
+      if(mode==='photo' && photoBlob) mediaUrl = await api.uploadStoryMedia(state.profile.id, photoBlob);
+      const row = await api.createStory({
+        userId: state.profile.id,
+        mediaUrl,
+        textContent: mode==='text' ? document.getElementById('storyTextInput').value.trim() : null,
+        bgColor: mode==='text' ? selectedColor : null
+      });
+      let group = state.storiesByUser.find(g=>g.userId===state.profile.id);
+      if(!group){
+        group = {userId: state.profile.id, name: state.profile.display_name, trad: state.profile.religion_path, verified: state.profile.isVerified, items:[]};
+        state.storiesByUser.unshift(group);
+      }
+      group.items.push({id: row.id, mediaUrl: row.media_url, textContent: row.text_content, bgColor: row.bg_color, createdAt: row.created_at});
+      closeModal();
+      renderStories();
+      toast('Story publicada ✦');
+    }catch(err){
+      btn.disabled = false; btn.textContent = 'Publicar Story';
+      toast('Não foi possível publicar a story agora.');
+      console.error(err);
+    }
+  });
+}
+
+/* ---------------- VISUALIZAR STORY (tela cheia) ---------------- */
+let storyViewerState = null;
+function storyViewerOrder(){
+  return [...state.storiesByUser].sort((a,b)=>{
+    if(a.userId===state.profile.id) return -1;
+    if(b.userId===state.profile.id) return 1;
+    return (storyGroupSeen(a)?1:0) - (storyGroupSeen(b)?1:0);
+  });
+}
+function openStoryViewer(userId){
+  const order = storyViewerOrder();
+  const groupIndex = order.findIndex(g=>g.userId===userId);
+  if(groupIndex===-1 || !order[groupIndex].items.length) return;
+  storyViewerState = { order, groupIndex, itemIndex:0, paused:false, interval:null, pct:0 };
+  document.getElementById('storyViewerOverlay').style.display = 'flex';
+  showStoryItem();
+}
+function closeStoryViewer(){
+  if(!storyViewerState) return;
+  clearInterval(storyViewerState.interval);
+  document.getElementById('storyViewerOverlay').style.display = 'none';
+  storyViewerState = null;
+  renderStories();
+}
+function showStoryItem(){
+  const s = storyViewerState;
+  if(!s) return;
+  clearInterval(s.interval);
+  s.paused = false;
+  const group = s.order[s.groupIndex];
+  const item = group.items[s.itemIndex];
+
+  document.getElementById('storyViewerBars').innerHTML = group.items.map((_,i)=>
+    `<div class="story-bar-track"><div class="story-bar-fill" data-bar="${i}" style="width:${i<s.itemIndex?'100':'0'}%"></div></div>`
+  ).join('');
+  const c = tradColor(group.trad);
+  document.getElementById('storyViewerAvatar').innerHTML = `<div class="avatar-sm" style="background:linear-gradient(145deg, ${c}, ${c}cc)">${initials(group.name)}</div>`;
+  document.getElementById('storyViewerName').textContent = group.userId===state.profile.id ? 'Você' : group.name;
+  document.getElementById('storyViewerTime').textContent = relativeTime(item.createdAt);
+
+  const media = document.getElementById('storyViewerMedia');
+  media.innerHTML = item.mediaUrl
+    ? `<img src="${escapeHtml(item.mediaUrl)}" alt="">`
+    : `<div class="story-text-card" style="background:linear-gradient(160deg, ${item.bgColor||'#8B6CF2'}, #07080C)">${escapeHtml(item.textContent||'')}</div>`;
+
+  const vc = document.getElementById('storyViewerViewCount');
+  if(group.userId===state.profile.id){
+    vc.style.display = 'block'; vc.textContent = '···';
+    api.fetchStoryViewCount(item.id).then(n=>{
+      if(storyViewerState) vc.textContent = `👁 ${n} ${n===1?'visualização':'visualizações'}`;
+    }).catch(()=>{});
+  } else {
+    vc.style.display = 'none';
+    if(!state.storyViewIds.has(item.id)){
+      state.storyViewIds.add(item.id);
+      api.markStoryViewed(item.id, state.profile.id).catch(console.error);
+    }
+  }
+
+  s.pct = 0;
+  s.interval = setInterval(()=>{
+    if(s.paused) return;
+    s.pct += 100/(5000/50);
+    const bar = document.querySelector(`.story-bar-fill[data-bar="${s.itemIndex}"]`);
+    if(bar) bar.style.width = Math.min(100, s.pct) + '%';
+    if(s.pct >= 100) nextStoryItem();
+  }, 50);
+}
+function nextStoryItem(){
+  const s = storyViewerState;
+  if(!s) return;
+  clearInterval(s.interval);
+  const group = s.order[s.groupIndex];
+  if(s.itemIndex < group.items.length-1){ s.itemIndex++; showStoryItem(); }
+  else if(s.groupIndex < s.order.length-1){ s.groupIndex++; s.itemIndex = 0; showStoryItem(); }
+  else closeStoryViewer();
+}
+function prevStoryItem(){
+  const s = storyViewerState;
+  if(!s) return;
+  clearInterval(s.interval);
+  if(s.itemIndex > 0){ s.itemIndex--; showStoryItem(); }
+  else if(s.groupIndex > 0){ s.groupIndex--; s.itemIndex = s.order[s.groupIndex].items.length-1; showStoryItem(); }
+  else showStoryItem();
 }
 
 /* =========================================================
@@ -3238,6 +3501,8 @@ document.addEventListener('click', (e)=>{
     else if(action==='open-coven'){ openCovenWall(id); }
     else if(action==='filter-covens'){ state.covenFilter = act.dataset.trad; renderCovens(); }
     else if(action==='go-covens'){ setNav('covens'); }
+    else if(action==='add-story'){ openNewStoryModal(); }
+    else if(action==='view-story'){ openStoryViewer(act.dataset.user); }
     else if(action==='send-flower'){
       const g = state.gratitude.find(g=>g.id===id);
       if(!g.sent){
@@ -4066,7 +4331,7 @@ function shortDate(iso){
 
 async function loadAppData(userId){
   await ensureProfileLoaded(userId);
-  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers, lunarQuests, myQuestCompletionIds, sacredPlaces, followingIds, blockedIds, followCounts] = await Promise.all([
+  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers, lunarQuests, myQuestCompletionIds, sacredPlaces, followingIds, blockedIds, followCounts, stories, myStoryViewIds] = await Promise.all([
     api.fetchPosts(),
     api.fetchMyLikedPostIds(userId),
     api.fetchGrimoire(userId),
@@ -4081,7 +4346,9 @@ async function loadAppData(userId){
     api.fetchSacredPlaces(),
     api.fetchFollowingIds(userId),
     api.fetchBlockedIds(userId),
-    api.fetchFollowCounts(userId)
+    api.fetchFollowCounts(userId),
+    api.fetchActiveStories(),
+    api.fetchMyStoryViewIds(userId)
   ]);
   state.sacredPlaces = sacredPlaces;
   state.myLikedPostIds = myLikes;
@@ -4132,6 +4399,24 @@ async function loadAppData(userId){
     id: row.id, userId: row.user_id, by: row.profiles?.display_name || 'Alguém', intention: row.intention,
     lights: row.lights_count, lit: myLights.has(row.id)
   }));
+  state.storyViewIds = myStoryViewIds;
+  const storyGroups = new Map();
+  stories.filter(row => !blockedIds.has(row.user_id)).forEach(row => {
+    if(!storyGroups.has(row.user_id)){
+      storyGroups.set(row.user_id, {
+        userId: row.user_id,
+        name: row.profiles?.display_name || 'Alguém',
+        trad: row.profiles?.religion_path || 'solitario',
+        verified: !!row.profiles?.is_verified,
+        items: []
+      });
+    }
+    storyGroups.get(row.user_id).items.push({
+      id: row.id, mediaUrl: row.media_url, textContent: row.text_content,
+      bgColor: row.bg_color, createdAt: row.created_at
+    });
+  });
+  state.storiesByUser = Array.from(storyGroups.values());
 }
 
 async function ensureProfileLoaded(userId){
@@ -4349,6 +4634,17 @@ supabase.auth.onAuthStateChange((_event, session) => {
     document.getElementById('authScreen').style.display = 'flex';
     document.getElementById('appShell').style.display = 'none';
   }
+});
+
+/* ---------------- STORY VIEWER: controles estáticos ---------------- */
+document.getElementById('storyViewerClose').addEventListener('click', closeStoryViewer);
+document.getElementById('storyViewerNext').addEventListener('click', nextStoryItem);
+document.getElementById('storyViewerPrev').addEventListener('click', prevStoryItem);
+['mousedown','touchstart'].forEach(evt=>{
+  document.getElementById('storyViewerContent').addEventListener(evt, ()=>{ if(storyViewerState) storyViewerState.paused = true; });
+});
+['mouseup','touchend','mouseleave'].forEach(evt=>{
+  document.getElementById('storyViewerContent').addEventListener(evt, ()=>{ if(storyViewerState) storyViewerState.paused = false; });
 });
 
 /* ---------------- INIT ---------------- */

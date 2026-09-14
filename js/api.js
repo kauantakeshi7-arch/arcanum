@@ -519,3 +519,51 @@ export async function askGuardianAI(category, question) {
     return null;
   }
 }
+
+/* ---------------- STORIES ---------------- */
+export async function fetchActiveStories() {
+  const { data, error } = await supabase
+    .from('stories')
+    .select('*, profiles!user_id(display_name, religion_path, is_verified)')
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchMyStoryViewIds(viewerId) {
+  const { data, error } = await supabase.from('story_views').select('story_id').eq('viewer_id', viewerId);
+  if (error) throw error;
+  return new Set(data.map(r => r.story_id));
+}
+
+export async function createStory({ userId, mediaUrl, textContent, bgColor }) {
+  const { data, error } = await supabase
+    .from('stories')
+    .insert({ user_id: userId, media_url: mediaUrl || null, text_content: textContent || null, bg_color: bgColor || null })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function markStoryViewed(storyId, viewerId) {
+  const { error } = await supabase.from('story_views').upsert({ story_id: storyId, viewer_id: viewerId }, { onConflict: 'story_id,viewer_id' });
+  if (error) throw error;
+}
+
+export async function fetchStoryViewCount(storyId) {
+  const { count, error } = await supabase.from('story_views').select('viewer_id', { count: 'exact', head: true }).eq('story_id', storyId);
+  if (error) throw error;
+  return count || 0;
+}
+
+export async function uploadStoryMedia(userId, blob) {
+  const path = `${userId}/stories/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
+  const { error } = await supabase.storage
+    .from('posts-media')
+    .upload(path, blob, { contentType: 'image/webp', upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from('posts-media').getPublicUrl(path);
+  return data.publicUrl;
+}
