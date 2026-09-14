@@ -347,6 +347,34 @@ export async function sendFlower(testimonialId, userId) {
   if (error) throw error;
 }
 
+/* ---------------- PASSE LUNAR (missões com comprovação por foto) ---------------- */
+export async function fetchLunarQuests() {
+  const seasonMonth = new Date().getMonth() + 1;
+  const { data, error } = await supabase
+    .from('lunar_quests')
+    .select('*')
+    .eq('season_month', seasonMonth)
+    .order('required_moon_phase');
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchMyQuestCompletions(userId) {
+  const { data, error } = await supabase.from('quest_completions').select('quest_id').eq('user_id', userId);
+  if (error) throw error;
+  return new Set(data.map(r => r.quest_id));
+}
+
+export async function completeLunarQuest(questId, userId, proofPhotoUrl, sharedToFeed) {
+  const { data, error } = await supabase
+    .from('quest_completions')
+    .insert({ quest_id: questId, user_id: userId, proof_photo_url: proofPhotoUrl, shared_to_feed: sharedToFeed })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function searchProfiles(query, excludeId, limit = 8) {
   const { data, error } = await supabase
     .from('profiles')

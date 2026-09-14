@@ -273,6 +273,11 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   display:flex; align-items:center; justify-content:center;
 }
 .post-photo{width:100%; max-height:340px; object-fit:cover; border-radius:12px; margin-bottom:10px; display:block;}
+.quest-proof-tag{
+  display:inline-block; font-size:11px; font-weight:600; color:var(--gold-soft);
+  background:rgba(212,168,83,0.12); border:1px solid rgba(212,168,83,0.3);
+  border-radius:20px; padding:3px 10px; margin-bottom:8px;
+}
 .photo-preview-wrap{position:relative; margin-bottom:10px;}
 .photo-preview-wrap img{width:100%; max-height:240px; object-fit:cover; border-radius:12px; display:block;}
 .photo-preview-remove{
@@ -415,6 +420,25 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 }
 .duel-card .section-title{font-size:19px; position:relative;}
 .duel-icon{width:22px; height:22px; vertical-align:-5px; margin-right:2px; filter:drop-shadow(0 0 6px rgba(212,168,83,0.5));}
+.lunar-card{margin-bottom:16px; text-align:left;}
+.lunar-card .section-sub{margin-bottom:14px;}
+.lunar-quest-list{display:flex; flex-direction:column; gap:10px;}
+.lunar-quest-row{
+  display:flex; align-items:center; gap:12px; text-align:left;
+  background:rgba(7,8,12,0.35); border:1px solid rgba(255,255,255,0.06);
+  border-radius:14px; padding:12px;
+}
+.lunar-quest-row.done{opacity:0.65;}
+.lunar-quest-glyph{font-size:24px; flex-shrink:0;}
+.lunar-quest-info{flex:1; min-width:0;}
+.lunar-quest-title{font-size:13.5px; font-weight:600; color:var(--text-hi); margin-bottom:2px;}
+.lunar-quest-sub{font-size:11.5px; color:var(--text-mid); line-height:1.4; margin-bottom:5px;}
+.lunar-quest-tag{
+  display:inline-block; font-size:10px; font-weight:700; color:var(--gold-soft);
+  padding:2px 8px; border-radius:10px; background:rgba(212,168,83,0.1); border:1px solid rgba(212,168,83,0.25);
+}
+.lunar-quest-tag.done-tag{color:var(--emerald); background:rgba(52,199,154,0.1); border-color:rgba(52,199,154,0.25);}
+.lunar-quest-btn{flex-shrink:0; margin:0; padding:8px 14px; font-size:12px; white-space:nowrap;}
 .btn-primary{
   position:relative; overflow:hidden;
   display:inline-flex; align-items:center; gap:8px; justify-content:center;
@@ -1254,6 +1278,8 @@ const state = {
   posts:[],
   myLikedPostIds: new Set(),
   myLitCandleIds: new Set(),
+  lunarQuests: [],
+  myQuestCompletionIds: new Set(),
   trilhas:[
     {id:'m1', title:'História & Fundamentos', sub:'Origens das tradições místicas', xp:15, done:true},
     {id:'m2', title:'Ervas & Banhos', sub:'Simbolismo das plantas sagradas', xp:15, done:true},
@@ -1408,6 +1434,23 @@ function renderStories(){
 /* =========================================================
    RENDER: ÁGORA (FEED)
    ========================================================= */
+/* ---------------- PASSE LUNAR ---------------- */
+const MOON_PHASE_INFO = {
+  nova: { label: 'Lua Nova', glyph: '🌑' },
+  crescente: { label: 'Lua Crescente', glyph: '🌓' },
+  cheia: { label: 'Lua Cheia', glyph: '🌕' },
+  minguante: { label: 'Lua Minguante', glyph: '🌗' }
+};
+function getMoonPhase(date = new Date()){
+  const synodic = 29.530588853;
+  const knownNewMoon = new Date('2000-01-06T18:14:00Z').getTime();
+  const diffDays = (date.getTime() - knownNewMoon) / 86400000;
+  const phase = ((diffDays % synodic) + synodic) % synodic;
+  if(phase < 1.84566 || phase > synodic - 1.84566) return 'nova';
+  if(phase < 14.765) return 'crescente';
+  if(phase < 16.61) return 'cheia';
+  return 'minguante';
+}
 function compressImageToWebP(file, maxSize = 1080, quality = 0.8){
   return new Promise((resolve, reject)=>{
     const img = new Image();
@@ -1452,6 +1495,10 @@ function renderPostCard(p, idx){
   let body = `<div class="post-text">${escapeHtml(p.content)}</div>`;
   if(p.type==='altar_photo'){
     body += (p.media && p.media.length) ? `<img class="post-photo" src="${escapeHtml(p.media[0])}" alt="Foto do altar" loading="lazy">` : altarPhotoSVG(idx);
+  }
+  if(p.type==='quest_proof'){
+    body += `<div class="quest-proof-tag">🌙 Passe Lunar</div>`;
+    if(p.media && p.media.length) body += `<img class="post-photo" src="${escapeHtml(p.media[0])}" alt="Comprovação da missão" loading="lazy">`;
   }
   if(p.type==='oracle_reading') body += `<div class="oracle-cards-row">${p.cards.map(cn=>`<div class="mini-tarot">${cn}</div>`).join('')}</div>`;
   const commentsHtml = p.comments.map(cm=>`<div class="comment-line"><b>${escapeHtml(cm.n)}:</b> ${escapeHtml(cm.t)}</div>`).join('');
@@ -1510,6 +1557,111 @@ function renderAgora(){
    RENDER: TRILHAS
    ========================================================= */
 const LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>';
+function renderLunarQuestCard(){
+  if(!state.lunarQuests.length) return '';
+  const currentPhase = getMoonPhase();
+  const rows = state.lunarQuests.map(q=>{
+    const info = MOON_PHASE_INFO[q.phase];
+    const isAvailable = !q.done && q.phase === currentPhase;
+    let tag;
+    if(q.done) tag = '✓ Concluído';
+    else if(isAvailable) tag = `Disponível agora · +${q.mana} Mana`;
+    else tag = `Disponível na ${info.label}`;
+    return `
+    <div class="lunar-quest-row ${q.done?'done':''}">
+      <div class="lunar-quest-glyph">${info.glyph}</div>
+      <div class="lunar-quest-info">
+        <div class="lunar-quest-title">${escapeHtml(q.title)}</div>
+        <div class="lunar-quest-sub">${escapeHtml(q.description)}</div>
+        <div class="lunar-quest-tag ${q.done?'done-tag':''}">${tag}</div>
+      </div>
+      ${isAvailable ? `<button class="btn-ghost lunar-quest-btn" data-action="open-lunar-quest" data-id="${q.id}">Comprovar</button>` : ''}
+    </div>`;
+  }).join('');
+  return `
+  <div class="duel-card lunar-card">
+    <div class="section-title">🌙 Passe Lunar</div>
+    <div class="section-sub">Ciclo de 28 dias — comprove sua prática em cada fase e ganhe Mana. Hoje: ${MOON_PHASE_INFO[currentPhase].glyph} ${MOON_PHASE_INFO[currentPhase].label}</div>
+    <div class="lunar-quest-list">${rows}</div>
+  </div>`;
+}
+function openLunarQuestModal(questId){
+  const quest = state.lunarQuests.find(q=>q.id===questId);
+  if(!quest) return;
+  const info = MOON_PHASE_INFO[quest.phase];
+  openModal(`
+    <div class="modal-title">${info.glyph} ${escapeHtml(quest.title)}</div>
+    <div class="node-sub" style="margin-bottom:14px">${escapeHtml(quest.description)}</div>
+    <button class="btn-ghost" id="btnAddQuestPhoto" style="width:100%; margin-bottom:10px">📷 Anexar foto de comprovação</button>
+    <input type="file" id="questPhotoInput" accept="image/*" style="display:none">
+    <div id="questPhotoPreview"></div>
+    <label class="form-field" style="display:flex; align-items:center; gap:8px; margin:14px 0; cursor:pointer">
+      <input type="checkbox" id="questShareFeed" checked style="width:auto">
+      <span style="font-size:12.5px; color:var(--text-mid)">Compartilhar essa conquista na Ágora</span>
+    </label>
+    <button class="btn-primary" style="width:100%" id="btnSubmitQuest" disabled>Comprovar e ganhar +${quest.mana} Mana</button>
+  `);
+  let questBlob = null;
+  const fileInput = document.getElementById('questPhotoInput');
+  const previewBox = document.getElementById('questPhotoPreview');
+  const submitBtn = document.getElementById('btnSubmitQuest');
+  document.getElementById('btnAddQuestPhoto').addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', async ()=>{
+    const file = fileInput.files[0];
+    if(!file) return;
+    if(!file.type.startsWith('image/')){ toast('Escolha um arquivo de imagem.'); return; }
+    previewBox.innerHTML = `<div class="photo-preview-wrap"><div class="altar-photo" style="height:100px"><span style="font-size:12px; color:var(--text-low)">Preparando imagem…</span></div></div>`;
+    try{
+      questBlob = await compressImageToWebP(file);
+      const url = URL.createObjectURL(questBlob);
+      previewBox.innerHTML = `<div class="photo-preview-wrap"><img src="${url}" alt="Pré-visualização"><button class="photo-preview-remove" id="btnRemoveQuestPhoto" type="button">✕</button></div>`;
+      submitBtn.disabled = false;
+      document.getElementById('btnRemoveQuestPhoto').addEventListener('click', ()=>{
+        questBlob = null; fileInput.value = ''; previewBox.innerHTML = ''; submitBtn.disabled = true;
+      });
+    }catch(err){
+      console.error(err);
+      questBlob = null;
+      previewBox.innerHTML = '';
+      toast('Não foi possível processar essa imagem.');
+    }
+  });
+  submitBtn.addEventListener('click', async ()=>{
+    if(!questBlob) return;
+    const shareFeed = document.getElementById('questShareFeed').checked;
+    submitBtn.disabled = true; submitBtn.textContent = 'Enviando…';
+    try{
+      const url = await api.uploadPostMedia(state.profile.id, questBlob);
+      await api.completeLunarQuest(quest.id, state.profile.id, url, shareFeed);
+      quest.done = true;
+      state.myQuestCompletionIds.add(quest.id);
+      state.profile.mana_xp += quest.mana;
+      await updateProfile(state.profile.id, {mana_xp: state.profile.mana_xp});
+      if(shareFeed){
+        const row = await api.createPost({
+          userId: state.profile.id,
+          religionPath: state.profile.religion_path,
+          type: 'quest_proof',
+          content: `Completei a missão do Passe Lunar: "${quest.title}" ✦`,
+          mediaUrls: [url]
+        });
+        state.posts.unshift({
+          id: row.id, userId: state.profile.id, user: state.profile.display_name, trad: state.profile.religion_path,
+          type: row.type, time: 'agora', content: row.content, media: row.media_urls || [], blessings:0, reposts:0,
+          saved:false, liked:false, comments:[], _commentsLoaded:true
+        });
+        renderStories();
+      }
+      closeModal();
+      renderAll();
+      toast(`Missão comprovada · +${quest.mana} Mana ✦`);
+    }catch(err){
+      submitBtn.disabled = false; submitBtn.textContent = `Comprovar e ganhar +${quest.mana} Mana`;
+      toast('Não foi possível registrar sua comprovação agora.');
+      console.error(err);
+    }
+  });
+}
 function renderTrilhas(){
   let currentAssigned = false;
   const nodes = state.trilhas.map((m,i)=>{
@@ -1530,6 +1682,7 @@ function renderTrilhas(){
   }).join('');
 
   document.getElementById('screen-trilhas').innerHTML = `
+    ${renderLunarQuestCard()}
     <div class="section-head">
       <div class="section-title">Árvore da Sabedoria</div>
       <div class="section-sub">Estude em módulos curtos e evolua seu grau iniciático</div>
@@ -2320,6 +2473,7 @@ document.addEventListener('click', (e)=>{
       }
     }
     else if(action==='open-quiz'){ openQuiz(id); }
+    else if(action==='open-lunar-quest'){ openLunarQuestModal(id); }
     else if(action==='close-modal'){ closeModal(); renderAll(); }
     else if(action==='set-candle'){ state.candleColor = act.dataset.color; renderSantuario(); }
     else if(action==='connect'){
@@ -2913,7 +3067,7 @@ function shortDate(iso){
 
 async function loadAppData(userId){
   await ensureProfileLoaded(userId);
-  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers] = await Promise.all([
+  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers, lunarQuests, myQuestCompletionIds] = await Promise.all([
     api.fetchPosts(),
     api.fetchMyLikedPostIds(userId),
     api.fetchGrimoire(userId),
@@ -2922,12 +3076,20 @@ async function loadAppData(userId){
     api.fetchCovens(),
     api.fetchMyCovenIds(userId),
     api.fetchGratitude(),
-    api.fetchMyFlowerIds(userId)
+    api.fetchMyFlowerIds(userId),
+    api.fetchLunarQuests(),
+    api.fetchMyQuestCompletions(userId)
   ]);
   state.myLikedPostIds = myLikes;
   state.myLitCandleIds = myLights;
   state.myCovenIds = myCovenIds;
   state.myFlowerIds = myFlowers;
+  state.myQuestCompletionIds = myQuestCompletionIds;
+  state.lunarQuests = lunarQuests.map(row => ({
+    id: row.id, title: row.title, description: row.description,
+    phase: row.required_moon_phase, mana: row.mana_reward,
+    done: myQuestCompletionIds.has(row.id)
+  }));
   state.covens = covens.map(row => ({
     id: row.id, name: row.name, tradition: row.tradition, description: row.description,
     privacy: row.privacy, memberCount: row.member_count, createdBy: row.created_by,
