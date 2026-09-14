@@ -677,6 +677,16 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .profile-name{font-family:var(--font-display); font-size:24px; font-weight:600;}
 .profile-grade{font-size:12.5px; color:var(--gold-soft); margin-top:2px; font-weight:600;}
 .familiar-tag{font-size:11px; color:var(--text-low); margin-top:4px;}
+.shop-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;}
+.shop-item{
+  display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
+  background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 10px;
+}
+.shop-item.equipped{border-color:rgba(212,168,83,0.4); box-shadow:0 0 0 1px rgba(212,168,83,0.15) inset;}
+.shop-swatch{width:36px; height:36px; border-radius:50%; box-shadow:0 0 14px rgba(0,0,0,0.3);}
+.shop-swatch-glyph{display:flex; align-items:center; justify-content:center; font-size:18px; background:var(--panel-3);}
+.shop-item-label{font-size:11.5px; color:var(--text-mid); line-height:1.3;}
+.shop-btn{width:100%; font-size:11.5px; padding:7px 10px;}
 .mana-bar-wrap{width:100%; margin-top:14px;}
 .mana-bar-track{height:6px; border-radius:3px; background:var(--panel-3); overflow:hidden;}
 .mana-bar-fill{
@@ -2345,12 +2355,34 @@ function familiarStage(mana){
 function robeColorForGrade(g){
   return ['#3a3450','#4b4166','#5a4a7a','#6f4f8f','#8B6CF2','#c9a24b','#e8c989'][g-1] || '#8B6CF2';
 }
+const SHOP_ITEMS = {
+  aura: [
+    {id:'default', label:'Aura da Tradição', cost:0},
+    {id:'emerald', label:'Aura Esmeralda', cost:120, color:'#34C79A'},
+    {id:'violet', label:'Aura Violeta Arcana', cost:120, color:'#8B6CF2'},
+    {id:'gold', label:'Aura Dourada Radiante', cost:250, color:'#D4A853'}
+  ],
+  robe: [
+    {id:'default', label:'Manto do Grau', cost:0},
+    {id:'crimson', label:'Manto Carmesim', cost:150, color:'#C1614A'},
+    {id:'midnight', label:'Manto Meia-Noite', cost:150, color:'#3B4066'},
+    {id:'ivory', label:'Manto Marfim Sagrado', cost:300, color:'#EDEAE3'}
+  ],
+  item: [
+    {id:'default', label:'Vela Simples', cost:0, glyph:'🕯️'},
+    {id:'crystal', label:'Cristal de Quartzo', cost:100, glyph:'🔮'},
+    {id:'grimoire', label:'Grimório Flutuante', cost:150, glyph:'📖'},
+    {id:'chalice', label:'Taça Ritual', cost:200, glyph:'🏆'}
+  ]
+};
+const SHOP_CATEGORY_LABELS = {aura:'Auras Elementais', robe:'Mantos', item:'Itens do Altar'};
+function shopItem(cat, id){ return SHOP_ITEMS[cat].find(i=>i.id===id) || SHOP_ITEMS[cat][0]; }
 function renderAvatarSVG(){
   const p = state.profile;
   const grade = gradeOf(p.mana_xp);
-  const robe = robeColorForGrade(grade);
+  const robe = shopItem('robe', p.avatarLayers.robe).color || robeColorForGrade(grade);
   const stage = familiarStage(p.mana_xp);
-  const auraColor = tradColor(p.religion_path);
+  const auraColor = shopItem('aura', p.avatarLayers.aura).color || tradColor(p.religion_path);
   let familiarSVG = '';
   if(stage===0) familiarSVG = `<ellipse cx="100" cy="118" rx="10" ry="13" fill="#E8C989"/>`;
   else if(stage===1) familiarSVG = `<circle cx="100" cy="118" r="11" fill="#8B6CF2"/><circle cx="96" cy="115" r="1.6" fill="#fff"/><circle cx="104" cy="115" r="1.6" fill="#fff"/>`;
@@ -2373,6 +2405,24 @@ function renderAvatarSVG(){
     ${familiarSVG}
   </svg>`;
 }
+function renderShopSections(){
+  const p = state.profile;
+  return Object.entries(SHOP_ITEMS).map(([cat, items])=>`
+    <div class="section-sub" style="margin-bottom:8px">${SHOP_CATEGORY_LABELS[cat]}</div>
+    <div class="shop-grid" style="margin-bottom:18px">
+      ${items.map(it=>{
+        const unlocked = p.unlockedItems.has(`${cat}:${it.id}`);
+        const equipped = p.avatarLayers[cat] === it.id;
+        const swatch = it.color ? `<div class="shop-swatch" style="background:${it.color}"></div>` : `<div class="shop-swatch shop-swatch-glyph">${it.glyph || '✦'}</div>`;
+        let btn;
+        if(equipped) btn = `<button class="btn-ghost shop-btn" disabled>Equipado</button>`;
+        else if(unlocked) btn = `<button class="btn-ghost shop-btn" data-action="equip-shop-item" data-cat="${cat}" data-id="${it.id}">Usar</button>`;
+        else btn = `<button class="btn-primary shop-btn" style="margin-top:0" data-action="buy-shop-item" data-cat="${cat}" data-id="${it.id}">${it.cost} Mana</button>`;
+        return `<div class="shop-item ${equipped?'equipped':''}">${swatch}<div class="shop-item-label">${escapeHtml(it.label)}</div>${btn}</div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
 function renderPerfil(){
   const p = state.profile;
   const grade = gradeOf(p.mana_xp);
@@ -2394,6 +2444,7 @@ function renderPerfil(){
       <div class="profile-name">${p.display_name}</div>
       <div class="profile-grade">Grau ${grade} · ${GRADES[grade]}</div>
       <div class="familiar-tag">Familiar Astral: ${FAMILIAR_STAGES[stage]}</div>
+      <div class="familiar-tag">${shopItem('item', p.avatarLayers.item).glyph} ${shopItem('item', p.avatarLayers.item).label}</div>
 
       <div class="mana-bar-wrap">
         <div class="mana-bar-track"><div class="mana-bar-fill" style="width:${(within/120*100)}%"></div></div>
@@ -2415,6 +2466,10 @@ function renderPerfil(){
       <button class="subtab ${state.profileSubtab==='reflexoes'?'active':''}" data-subtab="reflexoes">Reflexões</button>
     </div>
     ${state.profileSubtab==='grimorio' ? photosGrid : reflections}
+
+    <div class="section-head" style="margin-top:28px"><div class="section-title" style="font-size:19px">🛍️ Loja de Mana</div>
+      <div class="section-sub">Gaste seu Mana acumulado para customizar seu avatar e seu altar</div></div>
+    ${renderShopSections()}
 
     <div class="section-head" style="margin-top:28px"><div class="section-title" style="font-size:19px">🥷 Modo Discreto — Seu Refúgio Seguro</div></div>
     <div class="stealth-info-card">
@@ -2594,6 +2649,46 @@ document.addEventListener('click', (e)=>{
     }
     else if(action==='open-quiz'){ openQuiz(id); }
     else if(action==='open-lunar-quest'){ openLunarQuestModal(id); }
+    else if(action==='buy-shop-item'){
+      const cat = act.dataset.cat;
+      const it = shopItem(cat, act.dataset.id);
+      const key = `${cat}:${it.id}`;
+      if(state.profile.unlockedItems.has(key)) return;
+      if(state.profile.mana_xp < it.cost){ toast('Mana insuficiente para esse item.'); return; }
+      const prevMana = state.profile.mana_xp;
+      const prevLayers = {...state.profile.avatarLayers};
+      state.profile.mana_xp -= it.cost;
+      state.profile.unlockedItems.add(key);
+      state.profile.avatarLayers[cat] = it.id;
+      renderPerfil(); renderRightPanel();
+      updateProfile(state.profile.id, {
+        mana_xp: state.profile.mana_xp,
+        unlocked_items: Array.from(state.profile.unlockedItems),
+        avatar_layers: state.profile.avatarLayers
+      }).then(()=>{
+        toast(`${it.label} desbloqueado(a) ✦`);
+      }).catch(err=>{
+        state.profile.mana_xp = prevMana;
+        state.profile.unlockedItems.delete(key);
+        state.profile.avatarLayers = prevLayers;
+        toast('Não foi possível concluir a compra agora.');
+        console.error(err);
+        renderPerfil(); renderRightPanel();
+      });
+    }
+    else if(action==='equip-shop-item'){
+      const cat = act.dataset.cat;
+      const id = act.dataset.id;
+      const prevLayers = {...state.profile.avatarLayers};
+      state.profile.avatarLayers[cat] = id;
+      renderPerfil(); renderRightPanel();
+      updateProfile(state.profile.id, {avatar_layers: state.profile.avatarLayers}).catch(err=>{
+        state.profile.avatarLayers = prevLayers;
+        toast('Não foi possível usar esse item agora.');
+        console.error(err);
+        renderPerfil();
+      });
+    }
     else if(action==='draw-tarot-spread'){
       const shuffled = [...ORACLE_POOL].sort(()=>Math.random()-0.5);
       state.tarotSpread = [
@@ -3277,6 +3372,8 @@ async function ensureProfileLoaded(userId){
     moon: profile.moon_sign || '—',
     asc: profile.ascendant_sign || '—',
     stealthPin: profile.stealth_pin || '7777',
+    avatarLayers: profile.avatar_layers || {aura:'default', robe:'default', item:'default', familiar:'egg'},
+    unlockedItems: new Set(profile.unlocked_items || ['aura:default','robe:default','item:default']),
     // "Já registrou hoje" is derived from the DB date, so refreshing the
     // page doesn't let someone re-trigger the streak bonus the same day.
     loggedToday: profile.logged_today_at === new Date().toISOString().slice(0,10)
