@@ -1,0 +1,121 @@
+/* Copiado literalmente de ../../../index.html:20-56 — a paleta "nebulosa
+   cósmica" foi desenhada nesta sessão e não deve ser redesenhada aqui. */
+:root {
+  --void: #0a0918;
+  --panel: #14122a;
+  --panel-2: #1b1838;
+  --panel-3: #232047;
+  --line: rgba(212, 168, 83, 0.2);
+  --line-soft: rgba(212, 168, 83, 0.11);
+  --gold: #d4a853;
+  --gold-soft: #f0c878;
+  --violet: #8b6cf2;
+  --violet-soft: #b3a0f7;
+  --nebula-pink: #c363d9;
+  --emerald: #34c79a;
+  --text-hi: #f2eef7;
+  --text-mid: #ada6c4;
+  --text-low: #847ea0;
+  --danger: #d16b6b;
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  background: var(--void);
+  font-family: var(--font-body);
+  color: var(--text-hi);
+  display: flex;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+button {
+  font-family: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+}
+input,
+textarea,
+select {
+  font-family: inherit;
+  color: inherit;
+}
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--violet-soft);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  scrollbar-width: none;
+}
+
+/* Primitivos reaproveitados em várias telas (portados de index.html:513-529, 588-595) */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  background: linear-gradient(120deg, var(--gold), var(--gold-soft));
+  color: #22160a;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 11px 22px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(212, 168, 83, 0.3);
+}
+.btn-ghost {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 13px;
+  color: var(--text-mid);
+  font-weight: 600;
+}
+.form-field {
+  margin-bottom: 12px;
+}
+.form-field label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-low);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  color: var(--text-hi);
+}

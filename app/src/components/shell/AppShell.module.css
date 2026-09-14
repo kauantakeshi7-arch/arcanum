@@ -1,0 +1,266 @@
+/* Portado de ../../../../index.html:62-136 (.app-shell etc), 138-178 (topbar),
+   418-429 (.fab), 915-930 (.bottom-nav/.nav-btn). Breakpoints inalterados:
+   760px (side-nav aparece) e 1080px (right-panel aparece). */
+.shell {
+  width: 100%;
+  max-width: 1240px;
+  height: 100vh;
+  height: 100dvh;
+  background:
+    radial-gradient(ellipse 750px 450px at 12% -8%, rgba(139, 108, 242, 0.22), transparent 60%),
+    radial-gradient(ellipse 650px 450px at 102% 10%, rgba(195, 99, 217, 0.13), transparent 60%),
+    radial-gradient(ellipse 800px 600px at 50% 112%, rgba(212, 168, 83, 0.09), transparent 60%),
+    var(--void);
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+}
+.mainCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+.sideNav {
+  display: none;
+  flex-direction: column;
+  width: 230px;
+  flex-shrink: 0;
+  height: 100%;
+  padding: 22px 12px;
+  gap: 2px;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+.sideNav .brand {
+  padding: 6px 12px 26px;
+}
+.sideNavBtn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: var(--text-mid);
+  font-size: 14.5px;
+  font-weight: 500;
+  text-align: left;
+  width: 100%;
+}
+.sideNavBtn svg {
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+}
+.sideNavBtnActive {
+  color: var(--gold-soft);
+  background: rgba(212, 168, 83, 0.09);
+}
+.rightPanel {
+  display: none;
+  width: 300px;
+  flex-shrink: 0;
+  height: 100%;
+  padding: 22px 16px;
+  border-left: 1px solid var(--line);
+  overflow-y: auto;
+}
+.widgetCard {
+  background: linear-gradient(175deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 15px;
+  margin-bottom: 14px;
+}
+.widgetTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 11px;
+  background: linear-gradient(120deg, var(--gold-soft), var(--violet-soft));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (min-width: 760px) {
+  .mainCol {
+    border-left: 1px solid var(--line-soft);
+  }
+  .sideNav {
+    display: flex;
+  }
+  .bottomNav {
+    display: none !important;
+  }
+  .fab {
+    bottom: 24px;
+  }
+}
+@media (min-width: 1080px) {
+  .rightPanel {
+    display: block;
+  }
+}
+
+/* ---------- TOPBAR ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 20;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brandMark {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.brandMark svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 5px rgba(212, 168, 83, 0.45));
+}
+.brandName {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 22px;
+  background: linear-gradient(120deg, var(--gold-soft), var(--gold) 60%, var(--violet-soft));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.3px;
+}
+.topbarActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.iconBtn {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-mid);
+}
+.iconBtn:hover {
+  background: rgba(212, 168, 83, 0.08);
+  color: var(--gold-soft);
+}
+.iconBtn svg {
+  width: 19px;
+  height: 19px;
+}
+.badgeDot {
+  position: absolute;
+  top: -1px;
+  right: -2px;
+  background: var(--violet);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  box-shadow: 0 0 0 2px var(--void);
+}
+
+/* ---------- SCREENS + FAB ---------- */
+.screens {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  padding: 14px 16px 90px;
+}
+.fab {
+  position: absolute;
+  right: 16px;
+  bottom: 92px;
+  z-index: 15;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--violet), #6647c9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 6px 20px rgba(139, 108, 242, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+}
+.fab svg {
+  width: 22px;
+  height: 22px;
+  color: #fff;
+}
+
+/* ---------- BOTTOM NAV ---------- */
+.bottomNav {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 9px 6px 12px;
+  background: rgba(15, 13, 34, 0.85);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.navBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-low);
+  position: relative;
+  padding: 4px 10px;
+}
+.navBtn svg {
+  width: 21px;
+  height: 21px;
+}
+.navBtn span {
+  font-size: 9.5px;
+  font-weight: 500;
+}
+.navBtnActive {
+  color: var(--gold-soft);
+}
+.navBtnActive::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold-soft);
+}
+
+.placeholder {
+  color: var(--text-mid);
+  font-size: 14px;
+  padding: 40px 20px;
+  text-align: center;
+}
