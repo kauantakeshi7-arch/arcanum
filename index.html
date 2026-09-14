@@ -480,7 +480,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .grim-type{font-size:9.5px; font-weight:700; letter-spacing:0.3px; padding:2px 7px; border-radius:8px; text-transform:lowercase;}
 .grim-date{font-size:10.5px; color:var(--text-low); margin-left:auto;}
 .grim-title{font-size:13.5px; font-weight:600; color:var(--text-hi); margin-bottom:2px;}
-.grim-snippet{font-size:12px; color:var(--text-mid); line-height:1.5;}
+.grim-snippet{font-size:12px; color:var(--text-mid); line-height:1.5; white-space:pre-wrap;}
 
 .form-field{margin-bottom:12px;}
 .form-field label{display:block; font-size:11.5px; color:var(--text-low); margin-bottom:6px; font-weight:500;}
@@ -520,6 +520,22 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 }
 #sigilCanvas{width:100%; height:180px; border-radius:12px; background:var(--void); border:1px solid var(--line); touch-action:none; display:block;}
 .sigil-actions{display:flex; gap:10px; margin-top:10px;}
+
+/* ---------- LABORATÓRIO ALQUÍMICO ---------- */
+.alchemy-lab{
+  position:relative; overflow:hidden;
+  background:linear-gradient(175deg, var(--panel), var(--panel-2)); border:1px solid var(--line);
+  border-radius:16px; padding:14px; margin-bottom:14px;
+}
+.alchemy-result{
+  margin-top:12px; padding:12px; border-radius:12px;
+  background:rgba(212,168,83,0.06); border:1px solid rgba(212,168,83,0.25);
+}
+.alchemy-result-title{font-family:var(--font-display); font-size:16px; font-weight:600; color:var(--gold-soft); margin-bottom:8px;}
+.alchemy-row{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:5px 0; border-bottom:1px solid var(--line-soft); font-size:12.5px;}
+.alchemy-row:last-of-type{border-bottom:none;}
+.alchemy-row span{color:var(--text-low); flex-shrink:0;}
+.alchemy-row b{color:var(--text-hi); font-weight:600; text-align:right;}
 
 /* ---------- EGREGORA ---------- */
 .affinity-row{display:flex; align-items:center; gap:11px; padding:11px 0; border-bottom:1px solid var(--line-soft);}
@@ -1619,6 +1635,18 @@ function renderSantuario(){
     <div class="section-head"><div class="section-title" style="font-size:19px">Oráculo do Amanhecer</div></div>
     ${oracleHtml}
 
+    <div class="alchemy-lab">
+      <div class="section-title" style="font-size:19px; margin-bottom:2px">Laboratório Alquímico</div>
+      <div class="node-sub" style="margin-bottom:10px">Escolha seu objetivo e receba a receita mágica correspondente</div>
+      <div class="form-field">
+        <select id="alchemyGoal">
+          ${Object.entries(ALCHEMY_RECIPES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn-primary" style="width:100%; margin-top:0" id="btnCalcAlchemy">Calcular Receita</button>
+      <div id="alchemyResult"></div>
+    </div>
+
     <div class="sigil-tools">
       <div class="section-title" style="font-size:19px; margin-bottom:2px">Criador de Sigilos</div>
       <div class="node-sub" style="margin-bottom:10px">Escreva sua intenção e desenhe o símbolo com o dedo</div>
@@ -1635,6 +1663,49 @@ function renderSantuario(){
     ${grimHtml}
   `;
   setupSigilCanvas();
+  document.getElementById('btnCalcAlchemy').addEventListener('click', renderAlchemyResult);
+}
+
+const ALCHEMY_RECIPES = {
+  caminhos: {label:'Abertura de Caminhos', herbs:['Alecrim','Guiné','Arruda'], moon:'Lua Crescente', day:'Segunda-feira', planet:'Mercúrio', candle:'Amarela ou Dourada'},
+  protecao: {label:'Proteção / Descarrego', herbs:['Arruda','Guiné','Comigo-Ninguém-Pode'], moon:'Lua Minguante', day:'Sábado', planet:'Saturno', candle:'Preta ou Branca'},
+  prosperidade: {label:'Prosperidade', herbs:['Canela','Manjericão','Louro'], moon:'Lua Crescente', day:'Quinta-feira', planet:'Júpiter', candle:'Verde ou Dourada'},
+  harmonia: {label:'Harmonização / Paz no Lar', herbs:['Lavanda','Camomila','Alfazema'], moon:'Lua Cheia', day:'Sexta-feira', planet:'Vênus', candle:'Rosa ou Branca'},
+  amor: {label:'Amor / Relacionamentos', herbs:['Rosa','Canela','Cravo'], moon:'Lua Cheia', day:'Sexta-feira', planet:'Vênus', candle:'Vermelha ou Rosa'},
+  cura: {label:'Cura / Saúde', herbs:['Eucalipto','Hortelã','Alecrim'], moon:'Lua Nova', day:'Domingo', planet:'Sol', candle:'Branca ou Laranja'}
+};
+
+function renderAlchemyResult(){
+  const key = document.getElementById('alchemyGoal').value;
+  const r = ALCHEMY_RECIPES[key];
+  const box = document.getElementById('alchemyResult');
+  box.innerHTML = `
+    <div class="alchemy-result">
+      <div class="alchemy-result-title">✦ ${r.label}</div>
+      <div class="alchemy-row"><span>🌿 Ervas</span><b>${r.herbs.join(', ')}</b></div>
+      <div class="alchemy-row"><span>🌙 Fase lunar ideal</span><b>${r.moon}</b></div>
+      <div class="alchemy-row"><span>📅 Dia regente</span><b>${r.day}</b></div>
+      <div class="alchemy-row"><span>☉ Planeta regente</span><b>${r.planet}</b></div>
+      <div class="alchemy-row"><span>🕯️ Cor da vela</span><b>${r.candle}</b></div>
+      <button class="btn-ghost" style="width:100%; margin-top:10px" id="btnSaveAlchemy">Guardar no Grimório</button>
+    </div>`;
+  document.getElementById('btnSaveAlchemy').addEventListener('click', (ev)=>saveAlchemyToGrimoire(key, ev.currentTarget));
+}
+
+function saveAlchemyToGrimoire(key, btn){
+  const r = ALCHEMY_RECIPES[key];
+  const content = `Ervas: ${r.herbs.join(', ')}\nFase lunar ideal: ${r.moon}\nDia regente: ${r.day}\nPlaneta regente: ${r.planet}\nCor da vela: ${r.candle}`;
+  const title = `Receita: ${r.label}`;
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  api.addGrimoireEntry(state.profile.id, {entry_type:'ritual', title, content}).then(row=>{
+    state.grimoire.unshift({id:row.id, type:'ritual', title:row.title, content:row.content, date:'hoje'});
+    toast('Receita guardada no Grimório ✦');
+    renderSantuario();
+  }).catch(err=>{
+    btn.disabled = false; btn.textContent = 'Guardar no Grimório';
+    toast('Não foi possível guardar agora.');
+    console.error(err);
+  });
 }
 
 // Shared pointer state for the sigil canvas. Bound to window ONCE (below, outside
