@@ -6,7 +6,7 @@
 <title>Arcanum</title>
 <meta name="description" content="Sua Ágora, seu Altar e seu Grimório digital.">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#07080C">
+<meta name="theme-color" content="#061410">
 <link rel="icon" href="/icons/icon-512.png" type="image/png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,21 +18,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap');
 
 :root{
-  --void:#07080C;
-  --panel:#111320;
-  --panel-2:#171A2A;
-  --panel-3:#1D2033;
-  --line:rgba(212,168,83,0.16);
-  --line-soft:rgba(212,168,83,0.09);
+  --void:#061410;
+  --panel:#0D2019;
+  --panel-2:#12352A;
+  --panel-3:#173F32;
+  --line:rgba(199,158,90,0.22);
+  --line-soft:rgba(199,158,90,0.12);
   --gold:#D4A853;
   --gold-soft:#E8C989;
   --violet:#8B6CF2;
   --violet-soft:#B3A0F7;
   --emerald:#34C79A;
-  --text-hi:#F2EEE4;
-  --text-mid:#ADA8C0;
-  --text-low:#8783A0;
-  --danger:#C15C5C;
+  --text-hi:#F1EEE2;
+  --text-mid:#AEBDB3;
+  --text-low:#84948A;
+  --danger:#D16B6B;
   --font-display:'Cormorant Garamond', serif;
   --font-body:'Inter', sans-serif;
 }
@@ -64,9 +64,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   height:100vh;
   height:100dvh;
   background:
-    radial-gradient(ellipse 700px 400px at 15% -5%, rgba(139,108,242,0.14), transparent 60%),
-    radial-gradient(ellipse 600px 400px at 100% 15%, rgba(52,199,154,0.09), transparent 60%),
-    radial-gradient(ellipse 800px 600px at 50% 110%, rgba(212,168,83,0.07), transparent 60%),
+    radial-gradient(ellipse 700px 400px at 15% -5%, rgba(52,199,154,0.16), transparent 60%),
+    radial-gradient(ellipse 600px 400px at 100% 15%, rgba(212,168,83,0.10), transparent 60%),
+    radial-gradient(ellipse 800px 600px at 50% 110%, rgba(139,108,242,0.06), transparent 60%),
     var(--void);
   display:flex;
   position:relative;
@@ -897,7 +897,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 /* ---------- BOTTOM NAV & MINI PLAYER ---------- */
 .mini-player{
   position:absolute; left:12px; right:12px; bottom:76px; z-index:14;
-  background:rgba(23,26,42,0.92); backdrop-filter:blur(10px);
+  background:rgba(13,32,25,0.92); backdrop-filter:blur(10px);
   border:1px solid var(--line); border-radius:14px;
   padding:9px 12px; display:none; align-items:center; gap:10px;
   box-shadow:0 8px 24px rgba(0,0,0,0.4);
@@ -915,7 +915,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   position:relative; z-index:20;
   display:flex; justify-content:space-around; align-items:center;
   padding:9px 6px 12px;
-  background:rgba(17,19,32,0.85); backdrop-filter:blur(14px);
+  background:rgba(11,27,21,0.85); backdrop-filter:blur(14px);
   border-top:1px solid var(--line);
   flex-shrink:0;
 }
@@ -997,7 +997,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 /* ---------- TOASTS ---------- */
 .toast-wrap{position:absolute; top:70px; left:0; right:0; display:flex; flex-direction:column; align-items:center; gap:8px; z-index:60; pointer-events:none;}
 .toast{
-  background:rgba(23,26,42,0.95); border:1px solid var(--line); color:var(--text-hi);
+  background:rgba(14,35,28,0.95); border:1px solid var(--line); color:var(--text-hi);
   font-size:12.5px; font-weight:500; padding:9px 16px; border-radius:20px;
   box-shadow:0 6px 18px rgba(0,0,0,0.4);
   animation:toast-in .25s ease-out, toast-out .3s ease-in 1.9s forwards;
@@ -1012,13 +1012,28 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   position:fixed; inset:0; z-index:100;
   display:flex; align-items:center; justify-content:center;
   background:
-    radial-gradient(ellipse 800px 500px at 12% -8%, rgba(139,108,242,0.20), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 105% 10%, rgba(52,199,154,0.13), transparent 60%),
-    radial-gradient(ellipse 900px 700px at 50% 115%, rgba(212,168,83,0.11), transparent 60%),
+    radial-gradient(ellipse 800px 500px at 12% -8%, rgba(52,199,154,0.24), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 105% 10%, rgba(212,168,83,0.14), transparent 60%),
+    radial-gradient(ellipse 900px 700px at 50% 115%, rgba(139,108,242,0.07), transparent 60%),
     var(--void);
   padding:20px;
   overflow:hidden;
 }
+.auth-glyphs{
+  position:absolute; inset:0; pointer-events:none; opacity:0.16;
+  font-size:22px; color:var(--gold-soft); font-family:var(--font-display);
+  overflow:hidden;
+}
+.auth-glyphs span{position:absolute; filter:drop-shadow(0 0 4px rgba(212,168,83,0.25));}
+.auth-glyphs span:nth-child(1){top:8%; left:10%; font-size:26px; transform:rotate(-8deg);}
+.auth-glyphs span:nth-child(2){top:16%; left:80%; font-size:20px; transform:rotate(10deg);}
+.auth-glyphs span:nth-child(3){top:38%; left:4%; font-size:18px; transform:rotate(4deg);}
+.auth-glyphs span:nth-child(4){top:30%; left:92%; font-size:24px; transform:rotate(-12deg);}
+.auth-glyphs span:nth-child(5){top:64%; left:8%; font-size:22px; transform:rotate(-5deg);}
+.auth-glyphs span:nth-child(6){top:70%; left:88%; font-size:19px; transform:rotate(9deg);}
+.auth-glyphs span:nth-child(7){top:86%; left:20%; font-size:20px; transform:rotate(6deg);}
+.auth-glyphs span:nth-child(8){top:90%; left:70%; font-size:17px; transform:rotate(-9deg);}
+.auth-glyphs span:nth-child(9){top:50%; left:50%; font-size:16px; transform:translateX(-50%) rotate(3deg);}
 .auth-stars{
   position:absolute; inset:0;
   background-image:
@@ -1068,7 +1083,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .auth-card{
   position:relative; z-index:2;
   width:100%; max-width:380px;
-  background:linear-gradient(175deg, rgba(23,26,42,0.92), rgba(17,19,32,0.94));
+  background:linear-gradient(175deg, rgba(18,53,42,0.92), rgba(13,32,25,0.94));
   backdrop-filter:blur(6px);
   border:1px solid var(--line);
   border-radius:22px;
@@ -1151,6 +1166,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 <!-- AUTH GATE (shown until a Supabase session exists) -->
 <div class="auth-screen" id="authScreen">
   <div class="auth-stars" aria-hidden="true"></div>
+  <div class="auth-glyphs" aria-hidden="true">
+    <span>☿</span><span>♄</span><span>☽</span><span>♀</span><span>⚸</span><span>☉</span><span>♃</span><span>♆</span><span>✦</span>
+  </div>
   <div class="auth-particles" aria-hidden="true">
     <span></span><span></span><span></span><span></span><span></span><span></span>
   </div>
@@ -1860,7 +1878,7 @@ function showStoryItem(){
   const media = document.getElementById('storyViewerMedia');
   media.innerHTML = item.mediaUrl
     ? `<img src="${escapeHtml(item.mediaUrl)}" alt="">`
-    : `<div class="story-text-card" style="background:linear-gradient(160deg, ${item.bgColor||'#8B6CF2'}, #07080C)">${escapeHtml(item.textContent||'')}</div>`;
+    : `<div class="story-text-card" style="background:linear-gradient(160deg, ${item.bgColor||'#8B6CF2'}, #061410)">${escapeHtml(item.textContent||'')}</div>`;
 
   const vc = document.getElementById('storyViewerViewCount');
   if(group.userId===state.profile.id){
@@ -4320,7 +4338,7 @@ function downloadCardImage(title, lines, filename){
   canvas.width = 800; canvas.height = 1000;
   const ctx = canvas.getContext('2d');
   const grad = ctx.createLinearGradient(0, 0, 0, 1000);
-  grad.addColorStop(0, '#171A2A'); grad.addColorStop(1, '#07080C');
+  grad.addColorStop(0, '#12352A'); grad.addColorStop(1, '#061410');
   ctx.fillStyle = grad; ctx.fillRect(0, 0, 800, 1000);
   ctx.strokeStyle = 'rgba(212,168,83,0.4)'; ctx.lineWidth = 2;
   ctx.strokeRect(20, 20, 760, 960);
