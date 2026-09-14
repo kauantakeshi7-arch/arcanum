@@ -774,6 +774,15 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   border:1px solid var(--line);
   transition:border-color .2s, box-shadow .2s;
 }
+.auth-input-wrap.has-toggle input{padding-right:38px;}
+.auth-pw-toggle{
+  position:absolute; right:5px; top:50%; transform:translateY(-50%);
+  width:28px; height:28px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text-low); transition:color .2s, background .2s;
+}
+.auth-pw-toggle svg{width:17px; height:17px;}
+.auth-pw-toggle:hover{color:var(--gold-soft); background:rgba(212,168,83,0.08);}
 .auth-card .form-field input:focus{
   border-color:var(--gold-soft);
   box-shadow:0 0 0 3px rgba(212,168,83,0.14);
@@ -847,9 +856,12 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
     </div>
     <div class="form-field auth-field">
       <label for="authPassword">Senha</label>
-      <div class="auth-input-wrap">
+      <div class="auth-input-wrap has-toggle">
         <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
         <input type="password" id="authPassword" autocomplete="current-password">
+        <button type="button" class="auth-pw-toggle" id="authPwToggle" aria-label="Mostrar senha" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
       </div>
     </div>
     <div class="form-field auth-field" id="authUsernameField" style="display:none">
@@ -2259,6 +2271,36 @@ function setAuthMode(mode){
 }
 document.querySelectorAll('.auth-tab').forEach(t=>t.addEventListener('click', ()=>setAuthMode(t.dataset.authtab)));
 
+const EYE_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg>';
+document.getElementById('authPwToggle').addEventListener('click', ()=>{
+  const input = document.getElementById('authPassword');
+  const btn = document.getElementById('authPwToggle');
+  const willShow = input.type === 'password';
+  input.type = willShow ? 'text' : 'password';
+  btn.setAttribute('aria-pressed', String(willShow));
+  btn.setAttribute('aria-label', willShow ? 'Ocultar senha' : 'Mostrar senha');
+  btn.innerHTML = willShow ? EYE_OFF : EYE_OPEN;
+});
+
+// Supabase Auth error messages come back in English — translate the common
+// ones so the whole login/signup flow reads in Portuguese like the rest of the app.
+function translateAuthError(message){
+  if(!message) return 'Não foi possível autenticar. Tente novamente.';
+  const m = message.toLowerCase();
+  const waitMatch = message.match(/after (\d+) seconds?/i);
+  if(waitMatch) return `Por segurança, aguarde ${waitMatch[1]} segundos e tente de novo.`;
+  if(m.includes('invalid login credentials')) return 'E-mail ou senha incorretos.';
+  if(m.includes('already registered') || m.includes('already exists')) return 'Este e-mail já está cadastrado. Tente entrar.';
+  if(m.includes('email not confirmed')) return 'Confirme seu e-mail antes de entrar — verifique sua caixa de entrada.';
+  if(m.includes('password should be at least') || m.includes('password is too short')) return 'A senha precisa ter pelo menos 6 caracteres.';
+  if(m.includes('unable to validate email address') || m.includes('invalid email')) return 'Digite um e-mail válido.';
+  if(m.includes('email rate limit exceeded')) return 'Muitas tentativas com este e-mail. Aguarde alguns minutos e tente de novo.';
+  if(m.includes('user not found')) return 'Não encontramos uma conta com esse e-mail.';
+  if(m.includes('network') || m.includes('fetch')) return 'Falha de conexão. Verifique sua internet e tente novamente.';
+  return message;
+}
+
 document.getElementById('authSubmit').addEventListener('click', async ()=>{
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
@@ -2289,7 +2331,7 @@ document.getElementById('authSubmit').addEventListener('click', async ()=>{
     }
     await boot();
   }catch(err){
-    errorEl.textContent = err.message || 'Não foi possível autenticar. Tente novamente.';
+    errorEl.textContent = translateAuthError(err.message);
     console.error(err);
   }finally{
     submitBtn.disabled = false; loadingEl.style.display = 'none';
