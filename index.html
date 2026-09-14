@@ -3142,7 +3142,7 @@ document.addEventListener('click', (e)=>{
   if(e.target.id==='miniPlayBtn' || e.target.closest('#miniPlayBtn')) toggleAudio();
   if(e.target.id==='btnNotif' || e.target.closest('#btnNotif')) openNotifications();
   if(e.target.id==='btnDM' || e.target.closest('#btnDM')) openDMs();
-  if(e.target.id==='fabNewPost') openNewPostModal();
+  if(e.target.id==='fabNewPost' || e.target.closest('#fabNewPost')) openNewPostModal();
   if(e.target.id==='sideFabNewPost' || e.target.closest('#sideFabNewPost')){ setNav('agora'); openNewPostModal(); }
   if(e.target.id==='btnRevealOracle') revealOracle();
   if(e.target.id==='btnNewGrim') openNewGrimoireModal();
