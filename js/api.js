@@ -4,7 +4,7 @@ import { supabase } from './supabaseClient.js';
 export async function fetchPosts(limit = 50) {
   const { data, error } = await supabase
     .from('posts_with_counts')
-    .select('*, profiles(display_name, religion_path)')
+    .select('*, profiles!user_id(display_name, religion_path)')
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;
@@ -93,7 +93,7 @@ export async function addGrimoireEntry(userId, { entry_type, title, content }) {
 export async function fetchCandles(limit = 30) {
   const { data, error } = await supabase
     .from('candles_with_counts')
-    .select('*, profiles(display_name)')
+    .select('*, profiles!user_id(display_name)')
     .gt('expires_at', new Date().toISOString())
     .order('created_at', { ascending: false })
     .limit(limit);

@@ -130,7 +130,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 }
 .brand{display:flex; align-items:center; gap:8px;}
 .brand-mark{width:24px; height:24px; flex-shrink:0;}
-.brand-mark svg{width:100%; height:100%;}
+.brand-mark svg{width:100%; height:100%; filter:drop-shadow(0 0 5px rgba(212,168,83,0.45));}
 @media (prefers-reduced-motion: no-preference){
   .brand-mark svg{animation:slow-spin 40s linear infinite;}
 }
@@ -147,8 +147,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   letter-spacing:0.3px;
 }
 .topbar-actions{display:flex; align-items:center; gap:14px;}
-.icon-btn{position:relative; width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:var(--text-mid); transition:color .2s;}
-.icon-btn:active{color:var(--gold-soft);}
+.icon-btn{position:relative; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-mid); transition:color .2s, background .2s;}
+.icon-btn:hover{background:rgba(212,168,83,0.08); color:var(--gold-soft);}
+.icon-btn:active{color:var(--gold-soft); transform:scale(0.92);}
 .icon-btn svg{width:19px; height:19px;}
 .badge-dot{
   position:absolute; top:-1px; right:-2px;
@@ -164,8 +165,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   border:1px solid var(--line); border-radius:20px;
   padding:5px 9px 5px 7px;
   font-size:11px; color:var(--text-mid);
+  transition:box-shadow .3s, border-color .3s;
 }
-.audio-chip.playing{color:var(--emerald); border-color:rgba(52,199,154,0.35);}
+.audio-chip.playing{color:var(--emerald); border-color:rgba(52,199,154,0.4); box-shadow:0 0 12px rgba(52,199,154,0.25);}
 .eq-bars{display:flex; align-items:flex-end; gap:1.5px; height:11px;}
 .eq-bars span{width:2px; background:var(--text-low); border-radius:1px; height:3px;}
 .audio-chip.playing .eq-bars span{background:var(--emerald);}
@@ -187,17 +189,20 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   padding:2.5px;
   background:conic-gradient(from 210deg, var(--gold), var(--violet), var(--emerald), var(--gold));
   display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 14px -2px rgba(212,168,83,0.35);
+  transition:transform .2s;
 }
-.story-ring.seen{background:var(--panel-3);}
+.story:active .story-ring{transform:scale(0.94);}
+.story-ring.seen{background:var(--panel-3); box-shadow:none;}
 .story-avatar{
   width:100%; height:100%; border-radius:50%;
-  background:var(--panel-2);
+  background:linear-gradient(155deg, var(--panel-3), var(--panel-2));
   display:flex; align-items:center; justify-content:center;
   font-family:var(--font-display); font-weight:600; font-size:18px; color:var(--gold-soft);
   border:2px solid var(--void);
 }
-.story-add .story-ring{background:var(--panel-2); border:1px dashed var(--text-low);}
-.story-add .story-avatar{background:transparent; color:var(--text-mid); font-size:20px; font-weight:400;}
+.story-add .story-ring{background:var(--panel-2); border:1px dashed rgba(212,168,83,0.5); box-shadow:none;}
+.story-add .story-avatar{background:transparent; color:var(--gold-soft); font-size:20px; font-weight:400;}
 .story-name{font-size:10px; color:var(--text-mid); max-width:60px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 
 /* ---------- SCREENS ---------- */
@@ -214,16 +219,16 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .section-sub{font-size:12.5px; color:var(--text-low); margin-top:2px;}
 
 /* Feed tabs */
-.feed-tabs{display:flex; gap:6px; margin-bottom:16px; border-bottom:1px solid var(--line); padding-bottom:0;}
+.feed-tabs{display:flex; gap:8px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--line);}
 .feed-tab{
-  padding:8px 4px; font-size:13px; color:var(--text-low); font-weight:500;
-  position:relative; margin-right:14px;
+  padding:7px 14px; font-size:12.5px; color:var(--text-low); font-weight:600;
+  border-radius:20px; border:1px solid transparent; transition:background .2s, color .2s, border-color .2s;
 }
-.feed-tab.active{color:var(--gold-soft);}
-.feed-tab.active::after{
-  content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px;
-  background:linear-gradient(90deg,var(--gold),var(--violet));
-  border-radius:2px;
+.feed-tab.active{
+  color:var(--gold-soft);
+  background:linear-gradient(120deg, rgba(212,168,83,0.16), rgba(139,108,242,0.10));
+  border-color:rgba(212,168,83,0.35);
+  box-shadow:0 2px 10px rgba(212,168,83,0.12);
 }
 
 /* Cards */
@@ -233,7 +238,14 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   border-radius:16px 16px 16px 5px;
   padding:14px;
   margin-bottom:12px;
+  transition:transform .2s, border-color .2s, box-shadow .2s;
+  position:relative;
+  overflow:hidden;
 }
+@media (hover:hover){
+  .card:hover{transform:translateY(-2px); border-color:var(--line); box-shadow:0 10px 28px rgba(0,0,0,0.35);}
+}
+.post-accent{position:absolute; top:0; left:0; right:0; height:2.5px;}
 .post-head{display:flex; align-items:center; gap:9px; margin-bottom:10px;}
 .avatar-sm{
   width:34px; height:34px; border-radius:50%; flex-shrink:0;
@@ -257,17 +269,22 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 }
 .oracle-cards-row{display:flex; gap:8px; margin-bottom:10px;}
 .mini-tarot{
-  flex:1; aspect-ratio:2/3; border-radius:8px; border:1px solid var(--line);
+  flex:1; aspect-ratio:2/3; border-radius:8px; border:1px solid rgba(212,168,83,0.3);
   background:linear-gradient(160deg, var(--panel-3), var(--panel-2));
   display:flex; align-items:center; justify-content:center; text-align:center;
   font-family:var(--font-display); font-size:11px; padding:4px; color:var(--gold-soft);
+  box-shadow:0 0 0 1px rgba(212,168,83,0.08) inset, 0 4px 10px rgba(0,0,0,0.25);
 }
-.reaction-bar{display:flex; align-items:center; gap:18px; padding-top:2px; border-top:1px solid var(--line-soft); padding-top:10px;}
-.reaction-btn{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-low); transition:color .15s, transform .15s;}
+.reaction-bar{display:flex; align-items:center; gap:6px; padding-top:10px; border-top:1px solid var(--line-soft);}
+.reaction-btn{
+  display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text-low);
+  padding:6px 9px; border-radius:20px; transition:color .15s, transform .15s, background .2s;
+}
 .reaction-btn svg{width:16px; height:16px;}
-.reaction-btn.active{color:var(--gold-soft);}
-.reaction-btn.active.repost{color:var(--emerald);}
-.reaction-btn.active.save{color:var(--violet-soft);}
+@media (hover:hover){ .reaction-btn:hover{background:rgba(255,255,255,0.05); color:var(--text-mid);} }
+.reaction-btn.active{color:var(--gold-soft); background:rgba(212,168,83,0.12);}
+.reaction-btn.active.repost{color:var(--emerald); background:rgba(52,199,154,0.12);}
+.reaction-btn.active.save{color:var(--violet-soft); background:rgba(139,108,242,0.14);}
 .reaction-btn:active{transform:scale(0.88);}
 .reaction-btn.grow{margin-left:auto;}
 
@@ -288,7 +305,17 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   background:linear-gradient(145deg, var(--violet), #6647c9);
   display:flex; align-items:center; justify-content:center;
   box-shadow:0 6px 20px rgba(139,108,242,0.4), 0 0 0 1px rgba(255,255,255,0.06) inset;
+  transition:transform .15s;
 }
+.fab::before{
+  content:''; position:absolute; inset:-6px; border-radius:50%;
+  border:1px solid rgba(139,108,242,0.4); pointer-events:none;
+}
+@media (prefers-reduced-motion: no-preference){
+  .fab::before{animation:fab-pulse 2.6s ease-out infinite;}
+}
+@keyframes fab-pulse{0%{transform:scale(0.85); opacity:0.9;} 100%{transform:scale(1.35); opacity:0;}}
+.fab:active{transform:scale(0.92);}
 .fab svg{width:22px; height:22px; color:#fff;}
 
 /* ---------- TRILHAS ---------- */
@@ -1101,8 +1128,9 @@ function renderPostCard(p, idx){
   const commentsHtml = p.comments.map(cm=>`<div class="comment-line"><b>${escapeHtml(cm.n)}:</b> ${escapeHtml(cm.t)}</div>`).join('');
   return `
   <div class="card">
+    <div class="post-accent" style="background:linear-gradient(90deg, ${c}, ${c}00)"></div>
     <div class="post-head">
-      <div class="avatar-sm" style="background:${c}">${initials(p.user)}</div>
+      <div class="avatar-sm" style="background:linear-gradient(145deg, ${c}, ${c}cc); box-shadow:0 0 0 2px ${c}33, 0 3px 8px ${c}40">${initials(p.user)}</div>
       <div class="post-meta">
         <div class="post-name">${escapeHtml(p.user)}</div>
         <div class="post-sub">
