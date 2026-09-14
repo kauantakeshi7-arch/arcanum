@@ -637,6 +637,27 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .toggle-pill{display:inline-flex; align-items:center; gap:8px; font-size:12px; padding:8px 14px; border-radius:20px; border:1px solid var(--line); color:var(--text-mid); transition:background .2s, border-color .2s;}
 .toggle-pill.on{color:var(--emerald); border-color:rgba(52,199,154,0.4); background:rgba(52,199,154,0.08); box-shadow:0 0 10px rgba(52,199,154,0.18);}
 
+.veil-card{
+  position:relative; border-radius:18px; padding:18px; margin-bottom:14px;
+  background:radial-gradient(circle at 15% 10%, rgba(139,108,242,0.18), transparent 55%), var(--panel);
+  border:1px solid rgba(139,108,242,0.28);
+  box-shadow:0 14px 34px rgba(0,0,0,0.28);
+}
+.veil-history{display:flex; flex-direction:column; gap:10px; margin-bottom:14px; max-height:280px; overflow-y:auto;}
+.veil-exchange{background:rgba(7,8,12,0.35); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:10px 12px;}
+.veil-question{font-size:12.5px; color:var(--text-mid); font-style:italic; margin-bottom:6px;}
+.veil-answer{font-size:12.5px; color:var(--text-hi); line-height:1.55;}
+.tarot-spread-row{display:flex; gap:10px; margin-bottom:14px;}
+.tarot-spread-card{
+  flex:1; text-align:center; border-radius:12px; padding:12px 8px;
+  background:linear-gradient(160deg, var(--panel-3), var(--panel-2));
+  border:1px solid rgba(212,168,83,0.3);
+}
+.tarot-spread-pos{font-size:10px; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-low); margin-bottom:6px;}
+.tarot-spread-name{font-family:var(--font-display); font-size:14px; color:var(--gold-soft); margin-bottom:6px;}
+.tarot-spread-meaning{font-size:10.5px; color:var(--text-mid); line-height:1.4;}
+.tarot-spread-interpretation{font-size:12.5px; color:var(--text-mid); line-height:1.6; background:rgba(139,108,242,0.08); border:1px solid rgba(139,108,242,0.2); border-radius:12px; padding:12px;}
+
 .market-scroll{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px;}
 .market-item{flex-shrink:0; width:118px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px; transition:transform .15s, border-color .15s;}
 @media (hover:hover){ .market-item:hover{transform:translateY(-2px); border-color:rgba(212,168,83,0.3);} }
@@ -1280,6 +1301,8 @@ const state = {
   myLitCandleIds: new Set(),
   lunarQuests: [],
   myQuestCompletionIds: new Set(),
+  veilHistory: [],
+  tarotSpread: null,
   trilhas:[
     {id:'m1', title:'História & Fundamentos', sub:'Origens das tradições místicas', xp:15, done:true},
     {id:'m2', title:'Ervas & Banhos', sub:'Simbolismo das plantas sagradas', xp:15, done:true},
@@ -2049,6 +2072,101 @@ const ORACLE_POOL = [
   {name:'O Eremita', meaning:'Momento de recolhimento para escutar sua própria voz.'}
 ];
 
+/* ---------------- GUARDIÃO DO VÉU (oráculo simulado) ---------------- */
+const VEIL_CATEGORIES = {
+  ervas: 'Ervas & Rituais',
+  orixas: 'Orixás, Guias & Santos',
+  astrologia: 'Astrologia',
+  correspondencias: 'Correspondências Mágicas',
+  geral: 'Pergunta Geral'
+};
+const VEIL_RESPONSES = {
+  ervas: [
+    'As ervas respondem à intenção de quem colhe, não só à espécie. Antes do banho, pare um instante e diga em voz alta o que você busca — a planta escuta mais do que se imagina.',
+    'Arruda e guiné são companheiras clássicas de proteção, mas nenhuma erva substitui a limpeza que começa por dentro. Use-a como apoio, não como atalho.',
+    'Defumações feitas ao entardecer, na transição entre luz e sombra, tendem a carregar mais força simbólica — é a hora em que os portais se afinam.',
+    'Se a planta murchou rápido após o banho, tradição popular lê isso como sinal de que ela "puxou" uma carga pesada. Agradeça e descarte com respeito, em água corrente ou à raiz de uma árvore.',
+    'Alecrim abre caminhos, mas também exige que você caminhe. Ele afasta o que pesa, não decide por você o próximo passo.'
+  ],
+  orixas: [
+    'Cada Orixá, Exu, Pombagira ou Santo tem seu dia e seu tempo — respeitar esse calendário é uma forma de dizer "eu me organizo para você", e isso já é oferenda.',
+    'Antes de pedir, ofereça gratidão pelo que já foi recebido. O Guardião do Véu nota que muitos pedidos chegam sem esse passo, e a energia de gratidão abre portas que o pedido isolado não abre.',
+    'Guias e Santos costumam falar em sincronicidades pequenas — um número repetido, uma música no rádio, um pássaro parado na janela. Preste atenção ao comum, não só ao extraordinário.',
+    'Se você sente puxado para conhecer melhor um Orixá ou guia específico, isso raramente é acaso. Pesquise, converse com quem já anda essa senda, e vá com respeito — a pressa afasta mais do que aproxima.',
+    'Toda entidade tem sua ética própria. Antes de julgar uma tradição pela aparência, pergunte pelos seus valores — a Quimbanda e a Umbanda, por exemplo, guardam códigos de conduta bem definidos, ainda que diferentes entre si.'
+  ],
+  astrologia: [
+    'Mercúrio retrógrado não cancela sua vida — ele pede revisão. É um bom momento para reler contratos, reconectar com quem ficou no passado, não para lançar coisas novas no mundo.',
+    'Sua Lua de nascimento fala mais sobre o que você sente por dentro do que seu Sol. Se algo em você não combina com seu signo solar, olhe para a Lua antes de duvidar de si.',
+    'Trânsitos difíceis costumam parecer piores enquanto estão perto — como uma nuvem colada no rosto. Recue um passo (no tempo, não no espaço) e a forma completa aparece.',
+    'O Ascendente é a máscara social, o Sol é o motor, a Lua é a casa por dentro. Conhecer os três já é mais mapa do que a maioria das pessoas nunca chega a ler de si mesmas.',
+    'Um aspecto tenso no mapa não é sentença — é um músculo que ainda não foi exercitado. Ele dói até que você aprenda a usá-lo.'
+  ],
+  correspondencias: [
+    'Cores, dias da semana, planetas regentes e metais formam uma linguagem simbólica antiga — dourado e o Sol falam de vitalidade e clareza; prateado e a Lua, de intuição e do que se revela por dentro.',
+    'A correspondência mágica funciona como uma senha compartilhada: quando você usa vela verde para prosperidade, você está falando um idioma que gerações antes de você também falaram — isso tem peso.',
+    'Nem toda tradição usa a mesma correspondência para o mesmo elemento, e está tudo bem. O que importa é a consistência dentro do seu próprio sistema, não uma tabela universal única.',
+    'Números também carregam correspondência: o 7 fala de busca espiritual e introspecção; o 3, de criação e movimento. Repita atos em ciclos de 3, 7 ou 9 dias e observe o que isso muda na sua prática.',
+    'O incenso muda o ambiente antes mesmo da intenção — mirra pesa e aterra, alecrim clareia e abre. Escolha pelo efeito que você quer sentir, não só pelo cheiro que prefere.'
+  ],
+  geral: [
+    'O Guardião do Véu não entrega respostas prontas — ele devolve a pergunta em outra forma, para que você a escute com outros ouvidos. Releia o que você perguntou; talvez a resposta já esteja ali, disfarçada.',
+    'Toda dúvida sincera já é meio caminho andado. Quem não pergunta nada, geralmente, também não muda nada.',
+    'Confiança não é ausência de medo — é caminhar apesar dele, com os olhos abertos. O Véu não promete um caminho sem obstáculos, só a companhia através deles.',
+    'Se a resposta que você espera é "sim" ou "não", talvez a pergunta certa seja outra: "o que eu preciso entender antes disso?".',
+    'O tempo dos rituais raramente é o tempo da ansiedade. Uma prática bem-feita hoje vale mais do que dez feitas com pressa.'
+  ]
+};
+function drawVeilResponse(category){
+  const pool = VEIL_RESPONSES[category] || VEIL_RESPONSES.geral;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function renderVeilOracleCard(){
+  const history = state.veilHistory.map(h=>`
+    <div class="veil-exchange">
+      <div class="veil-question">"${escapeHtml(h.q)}"</div>
+      <div class="veil-answer">🕯️ ${escapeHtml(h.a)}</div>
+    </div>
+  `).join('');
+  const spread = state.tarotSpread;
+  const spreadHtml = spread ? `
+    <div class="tarot-spread-row">
+      ${spread.map(s=>`
+        <div class="tarot-spread-card">
+          <div class="tarot-spread-pos">${s.pos}</div>
+          <div class="tarot-spread-name">${escapeHtml(s.card.name)}</div>
+          <div class="tarot-spread-meaning">${escapeHtml(s.card.meaning)}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="tarot-spread-interpretation">
+      No <b>Passado</b>, ${spread[0].card.name} moldou o terreno onde você pisa. No <b>Presente</b>, ${spread[1].card.name} mostra a energia que pede atenção agora. E no <b>Futuro</b>, ${spread[2].card.name} aponta para onde esse fio pode te levar — se você seguir o convite dele.
+    </div>
+    <button class="btn-ghost" style="width:100%; margin-top:10px" data-action="draw-tarot-spread">Tirar novamente</button>
+  ` : `
+    <div class="node-sub" style="margin-bottom:12px">Mentalize uma pergunta e revele Passado, Presente e Futuro em três cartas.</div>
+    <button class="btn-primary" style="width:100%" data-action="draw-tarot-spread">Tirar as 3 Cartas</button>
+  `;
+  return `
+    <div class="veil-card">
+      <div class="section-title" style="font-size:19px">🔮 O Guardião do Véu</div>
+      <div class="node-sub" style="margin-bottom:12px">Traga sua dúvida sobre ervas, guias, astrologia ou correspondências — o Véu responde com o que a tradição ensina.</div>
+      ${history ? `<div class="veil-history">${history}</div>` : ''}
+      <div class="form-field">
+        <select id="veilCategory">${Object.entries(VEIL_CATEGORIES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+      </div>
+      <div class="form-field" style="display:flex; gap:8px; align-items:flex-start">
+        <input type="text" id="veilQuestionInput" aria-label="Sua pergunta ao Guardião" placeholder="Escreva sua pergunta…" style="flex:1">
+        <button class="btn-ghost" id="btnAskVeil">Perguntar</button>
+      </div>
+    </div>
+    <div class="veil-card">
+      <div class="section-title" style="font-size:19px">🃏 Mesa de Tarot — 3 Cartas</div>
+      ${spreadHtml}
+    </div>
+  `;
+}
+
 /* =========================================================
    RENDER: EGRÉGORA
    ========================================================= */
@@ -2127,6 +2245,8 @@ function renderEgregora(){
       <div class="section-title">Egrégora & Conexões</div>
       <div class="section-sub">Comunidade, apoio e sincronicidade</div>
     </div>
+
+    ${renderVeilOracleCard()}
 
     <div class="moon-card">
       <div class="section-title" style="font-size:17px">🌕 Ritual Síncrono: Lua Cheia em Touro</div>
@@ -2474,6 +2594,15 @@ document.addEventListener('click', (e)=>{
     }
     else if(action==='open-quiz'){ openQuiz(id); }
     else if(action==='open-lunar-quest'){ openLunarQuestModal(id); }
+    else if(action==='draw-tarot-spread'){
+      const shuffled = [...ORACLE_POOL].sort(()=>Math.random()-0.5);
+      state.tarotSpread = [
+        {pos:'Passado', card: shuffled[0]},
+        {pos:'Presente', card: shuffled[1]},
+        {pos:'Futuro', card: shuffled[2]}
+      ];
+      renderEgregora();
+    }
     else if(action==='close-modal'){ closeModal(); renderAll(); }
     else if(action==='set-candle'){ state.candleColor = act.dataset.color; renderSantuario(); }
     else if(action==='connect'){
@@ -2542,6 +2671,15 @@ document.addEventListener('click', (e)=>{
   if(e.target.id==='sideFabNewPost' || e.target.closest('#sideFabNewPost')){ setNav('agora'); openNewPostModal(); }
   if(e.target.id==='btnRevealOracle') revealOracle();
   if(e.target.id==='btnNewGrim') openNewGrimoireModal();
+  if(e.target.id==='btnAskVeil'){
+    const input = document.getElementById('veilQuestionInput');
+    const category = document.getElementById('veilCategory').value;
+    const q = input.value.trim();
+    if(!q){ toast('Escreva sua pergunta ao Guardião.'); return; }
+    state.veilHistory.push({q, a: drawVeilResponse(category)});
+    if(state.veilHistory.length > 5) state.veilHistory.shift();
+    renderEgregora();
+  }
   if(e.target.id==='btnNewCandle') addNewCandle();
   if(e.target.id==='btnNewCoven') openNewCovenModal();
   if(e.target.id==='btnNewGratitude') openNewGratitudeModal();
