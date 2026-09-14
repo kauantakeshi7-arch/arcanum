@@ -32,6 +32,16 @@ export async function createPost({ userId, religionPath, type, content, oracleCa
   return data;
 }
 
+export async function updatePost(postId, content) {
+  const { error } = await supabase.from('posts').update({ content }).eq('id', postId);
+  if (error) throw error;
+}
+
+export async function deletePost(postId) {
+  const { error } = await supabase.from('posts').delete().eq('id', postId);
+  if (error) throw error;
+}
+
 /* ---------------- MEDIA UPLOAD (posts-media bucket) ---------------- */
 export async function uploadPostMedia(userId, blob) {
   const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
@@ -324,6 +334,16 @@ export async function postToCoven(covenId, userId, content, mediaUrl) {
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function updateCovenPost(postId, content) {
+  const { error } = await supabase.from('coven_posts').update({ content }).eq('id', postId);
+  if (error) throw error;
+}
+
+export async function deleteCovenPost(postId) {
+  const { error } = await supabase.from('coven_posts').delete().eq('id', postId);
+  if (error) throw error;
 }
 
 export async function uploadCovenPostMedia(userId, blob) {

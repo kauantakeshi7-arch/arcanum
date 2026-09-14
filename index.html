@@ -675,6 +675,30 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .coven-name{font-size:13.5px; font-weight:600; color:var(--text-hi);}
 .coven-meta{font-size:11px; color:var(--text-low); margin-top:1px;}
 
+/* ---------- ONBOARDING (Ágora) ---------- */
+.onboarding-card{
+  margin:14px 16px 0; padding:14px 16px;
+  background:linear-gradient(135deg, rgba(139,108,242,0.14), rgba(212,168,83,0.08));
+  border:1px solid var(--line); border-radius:16px;
+}
+.onboarding-head{display:flex; align-items:center; justify-content:space-between;}
+.onboarding-title{font-family:var(--font-display); font-size:17px; font-weight:600; color:var(--text-hi);}
+.onboarding-close{width:26px; height:26px; color:var(--text-low); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+.onboarding-close svg{width:16px; height:16px;}
+.onboarding-sub{font-size:12px; color:var(--text-mid); margin:2px 0 12px;}
+.onboarding-step{
+  display:flex; align-items:center; gap:10px; width:100%; padding:9px 10px; margin-bottom:6px;
+  border-radius:10px; background:rgba(255,255,255,0.03);
+  font-size:12.5px; color:var(--text-mid); text-align:left;
+}
+.onboarding-step:last-child{margin-bottom:0;}
+.onboarding-step.done{color:var(--text-low); text-decoration:line-through; opacity:.6; pointer-events:none;}
+.onboarding-check{
+  width:18px; height:18px; border-radius:50%; border:1.5px solid var(--line); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--emerald);
+}
+.onboarding-step.done .onboarding-check{border-color:var(--emerald); background:rgba(52,199,154,0.15);}
+
 /* ---------- COVENS TEASER (Ágora) ---------- */
 .covens-teaser{
   display:flex; align-items:center; gap:12px; padding:14px 16px; margin:14px 16px 0;
@@ -1286,6 +1310,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
           <span class="eq-bars"><span></span><span></span><span></span></span>
           <span id="audioChipLabel">432Hz</span>
         </button>
+        <button class="icon-btn" id="btnGlobalSearch" aria-label="Buscar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        </button>
         <button class="icon-btn" id="btnNotif" aria-label="Ver notificações">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
           <span class="badge-dot" id="notifBadge" style="display:none">0</span>
@@ -1846,6 +1873,7 @@ function showStoryItem(){
     if(!state.storyViewIds.has(item.id)){
       state.storyViewIds.add(item.id);
       api.markStoryViewed(item.id, state.profile.id).catch(console.error);
+      api.createNotification(group.userId, state.profile.id, 'story_view', item.id).catch(console.error);
     }
   }
 
@@ -1935,6 +1963,33 @@ function feedFiltered(){
   if(state.feedTab==='seguindo') return state.posts.filter(p=>state.followingIds.has(p.userId));
   return state.posts;
 }
+function renderOnboardingCard(){
+  if(localStorage.getItem('arcanum_onboarding_dismissed')) return '';
+  const hasFollow = state.followingIds.size > 0;
+  const hasCoven = state.covens.some(c=>c.joined);
+  const hasPost = state.posts.some(p=>p.userId===state.profile.id);
+  if(hasFollow && hasCoven && hasPost) return '';
+  const steps = [
+    {done:hasFollow, label:'Siga alguém que ressoe com você', action:'onboarding-follow'},
+    {done:hasCoven, label:'Entre ou funde um Coven', action:'onboarding-coven'},
+    {done:hasPost, label:'Compartilhe sua primeira reflexão', action:'onboarding-post'}
+  ];
+  return `<div class="onboarding-card">
+    <div class="onboarding-head">
+      <div class="onboarding-title">✦ Bem-vindo(a) ao Arcanum</div>
+      <button class="onboarding-close" data-action="dismiss-onboarding" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="onboarding-sub">Três passos rápidos para começar sua jornada</div>
+    ${steps.map(s=>`
+      <button class="onboarding-step ${s.done?'done':''}" data-action="${s.done?'':s.action}">
+        <span class="onboarding-check">${s.done?'✓':''}</span>
+        <span>${s.label}</span>
+      </button>
+    `).join('')}
+  </div>`;
+}
 function renderCovensTeaser(){
   const joined = state.covens.filter(c=>c.joined);
   const chips = joined.slice(0,4).map(c=>{
@@ -2016,6 +2071,7 @@ function renderAgora(){
   const tabs = [['para-voce','Para Você'],['seguindo','Seguindo'],['minha-senda','Minha Senda']];
   const posts = feedFiltered();
   document.getElementById('screen-agora').innerHTML = `
+    ${renderOnboardingCard()}
     ${renderCovensTeaser()}
     <div class="feed-tabs">
       ${tabs.map(([id,label])=>`<button class="feed-tab ${state.feedTab===id?'active':''}" data-feedtab="${id}">${label}</button>`).join('')}
@@ -3459,7 +3515,9 @@ document.addEventListener('click', (e)=>{
       else if(rerender==='agora') renderAgora();
       else if(rerender==='egregora') renderEgregora();
       const call = wasFollowing ? api.unfollowUser(state.profile.id, target) : api.followUser(state.profile.id, target);
-      call.catch(err=>{
+      call.then(()=>{
+        if(!wasFollowing) api.createNotification(target, state.profile.id, 'follow', null).catch(console.error);
+      }).catch(err=>{
         if(wasFollowing){ state.followingIds.add(target); state.followCounts.following += 1; }
         else{ state.followingIds.delete(target); state.followCounts.following = Math.max(0, state.followCounts.following-1); }
         toast('Não foi possível concluir agora.');
@@ -3468,6 +3526,11 @@ document.addEventListener('click', (e)=>{
     }
     else if(action==='block-user'){ confirmBlockUser(act.dataset.target); }
     else if(action==='report-content'){ openReportModal(act.dataset.type, act.dataset.id); }
+    else if(action==='edit-post'){ openEditPostModal(id); }
+    else if(action==='delete-post'){ confirmDeletePost(id); }
+    else if(action==='coven-post-menu'){ openCovenPostMenu(id); }
+    else if(action==='edit-coven-post'){ openEditCovenPostModal(id); }
+    else if(action==='delete-coven-post'){ confirmDeleteCovenPost(id); }
     else if(action==='close-modal'){ closeModal(); renderAll(); }
     else if(action==='set-candle'){ state.candleColor = act.dataset.color; renderSantuario(); }
     else if(action==='connect'){
@@ -3501,6 +3564,7 @@ document.addEventListener('click', (e)=>{
       const call = c.joined ? api.joinCoven(c.id, state.profile.id) : api.leaveCoven(c.id, state.profile.id);
       call.then(()=>{
         toast(c.joined ? `Você entrou em ${c.name} ✦` : `Você saiu de ${c.name}`);
+        if(c.joined && c.createdBy) api.createNotification(c.createdBy, state.profile.id, 'coven_join', c.id).catch(console.error);
       }).catch(err=>{
         c.joined = wasJoined; c.memberCount += wasJoined?1:-1;
         toast('Não foi possível atualizar sua entrada no coven.');
@@ -3516,6 +3580,19 @@ document.addEventListener('click', (e)=>{
     else if(action==='coven-remove-member'){ handleCovenRemoveMember(document.getElementById('covenMembersList')?.dataset.covenId, act.dataset.uid); }
     else if(action==='filter-covens'){ state.covenFilter = act.dataset.trad; renderCovens(); }
     else if(action==='go-covens'){ setNav('covens'); }
+    else if(action==='open-notif'){
+      const type = act.dataset.type, target = act.dataset.target, actor = act.dataset.actor, name = act.dataset.name;
+      closeModal();
+      if(type==='follow'){ openProfileModal(actor); }
+      else if(type==='message'){ api.getOrCreateConversation(state.profile.id, actor).then(convo=> openDmThread(convo.id, actor, name)).catch(console.error); }
+      else if(['coven_join','coven_promote','coven_remove','coven_post_like','coven_post_comment'].includes(type)){
+        if(target) openCovenWall(target);
+      }
+    }
+    else if(action==='dismiss-onboarding'){ localStorage.setItem('arcanum_onboarding_dismissed', '1'); renderAgora(); }
+    else if(action==='onboarding-follow'){ openFindPeopleModal(); }
+    else if(action==='onboarding-coven'){ setNav('covens'); }
+    else if(action==='onboarding-post'){ openNewPostModal(); }
     else if(action==='add-story'){ openNewStoryModal(); }
     else if(action==='view-story'){ openStoryViewer(act.dataset.user); }
     else if(action==='send-flower'){
@@ -3540,6 +3617,7 @@ document.addEventListener('click', (e)=>{
   if(e.target.id==='sideAudioChip' || e.target.closest('#sideAudioChip')) openAudioMenu();
   if(e.target.id==='miniPlayBtn' || e.target.closest('#miniPlayBtn')) toggleAudio();
   if(e.target.id==='btnNotif' || e.target.closest('#btnNotif')) openNotifications();
+  if(e.target.id==='btnGlobalSearch' || e.target.closest('#btnGlobalSearch')) openGlobalSearchModal();
   if(e.target.id==='btnDM' || e.target.closest('#btnDM')) openDMs();
   if(e.target.id==='fabNewPost' || e.target.closest('#fabNewPost')) openNewPostModal();
   if(e.target.id==='sideFabNewPost' || e.target.closest('#sideFabNewPost')){ setNav('agora'); openNewPostModal(); }
@@ -3620,8 +3698,16 @@ const NOTIF_TEXT = {
   comment: (n)=>`<b style="color:var(--text-hi)">${n}</b> comentou em sua publicação.`,
   candle_light: (n)=>`<b style="color:var(--text-hi)">${n}</b> acendeu uma luz na sua firmeza.`,
   connection: (n)=>`<b style="color:var(--text-hi)">${n}</b> quer se conectar com você.`,
-  message: (n)=>`<b style="color:var(--text-hi)">${n}</b> enviou uma mensagem.`
+  message: (n)=>`<b style="color:var(--text-hi)">${n}</b> enviou uma mensagem.`,
+  follow: (n)=>`<b style="color:var(--text-hi)">${n}</b> passou a seguir você.`,
+  coven_join: (n)=>`<b style="color:var(--text-hi)">${n}</b> entrou no seu coven.`,
+  coven_promote: (n)=>`<b style="color:var(--text-hi)">${n}</b> te tornou moderador(a) de um coven.`,
+  coven_remove: (n)=>`<b style="color:var(--text-hi)">${n}</b> te removeu de um coven.`,
+  coven_post_like: (n)=>`<b style="color:var(--text-hi)">${n}</b> ressoou (Axé) com sua publicação no coven.`,
+  coven_post_comment: (n)=>`<b style="color:var(--text-hi)">${n}</b> comentou em sua publicação no coven.`,
+  story_view: (n)=>`<b style="color:var(--text-hi)">${n}</b> viu sua story.`
 };
+const NOTIF_NAVIGABLE = new Set(['follow','coven_join','coven_promote','coven_remove','coven_post_like','coven_post_comment','message']);
 async function openNotifications(){
   openModal(`<div class="modal-title">Notificações</div><div id="notifList" class="empty-hint">Carregando…</div>`);
   try{
@@ -3636,7 +3722,8 @@ async function openNotifications(){
       list.innerHTML = rows.map(r=>{
         const name = escapeHtml(r.profiles?.display_name || 'Alguém');
         const textFn = NOTIF_TEXT[r.type];
-        return `<div class="reflection-item ${r.is_read?'':'notif-unread'}">${textFn?textFn(name):'Nova notificação'}<div class="reflection-date">${relativeTime(r.created_at)}</div></div>`;
+        const clickable = NOTIF_NAVIGABLE.has(r.type);
+        return `<div class="reflection-item ${r.is_read?'':'notif-unread'}" ${clickable?`data-action="open-notif" data-type="${r.type}" data-target="${r.target_id||''}" data-actor="${r.actor_id}" data-name="${name}" style="cursor:pointer"`:''}>${textFn?textFn(name):'Nova notificação'}<div class="reflection-date">${relativeTime(r.created_at)}</div></div>`;
       }).join('');
     }
     if(rows.some(r=>!r.is_read)){
@@ -3770,6 +3857,53 @@ function openFindPeopleModal(){
   });
 }
 
+/* ---------------- BUSCA CENTRAL ---------------- */
+function openGlobalSearchModal(){
+  openModal(`<div class="modal-title">Buscar</div>
+    <div class="form-field"><input type="text" id="globalSearchInput" placeholder="Pessoas, covens ou publicações…" autocomplete="off"></div>
+    <div id="globalSearchResults" class="empty-hint">Digite ao menos 2 letras.</div>`);
+  const input = document.getElementById('globalSearchInput');
+  requestAnimationFrame(()=>input.focus());
+  let debounce;
+  input.addEventListener('input', ()=>{
+    clearTimeout(debounce);
+    debounce = setTimeout(runGlobalSearch, 300);
+  });
+  async function runGlobalSearch(){
+    const q = input.value.trim();
+    const results = document.getElementById('globalSearchResults');
+    if(!results) return;
+    if(q.length < 2){ results.className = 'empty-hint'; results.textContent = 'Digite ao menos 2 letras.'; return; }
+    const qLower = q.toLowerCase();
+    const covenMatches = state.covens.filter(c=>c.name.toLowerCase().includes(qLower)).slice(0, 8);
+    const postMatches = state.posts.filter(p=>(p.content||'').toLowerCase().includes(qLower)).slice(0, 8);
+    let peopleMatches = [];
+    try{ peopleMatches = await api.searchProfiles(q, state.profile.id); }catch(err){ console.error(err); }
+    if(!results.isConnected) return;
+    if(!peopleMatches.length && !covenMatches.length && !postMatches.length){
+      results.className = 'empty-hint'; results.textContent = 'Nada encontrado.'; return;
+    }
+    results.className = '';
+    results.innerHTML = `
+      ${peopleMatches.length ? `<div class="section-sub" style="margin:10px 0 6px">Pessoas</div>${peopleMatches.map(p=>`
+        <button class="dm-convo-row" data-action="view-profile" data-id="${p.id}">
+          <div class="avatar-sm" style="background:${tradColor('solitario')}">${initials(p.display_name)}</div>
+          <div class="dm-convo-info"><div class="dm-convo-name">${escapeHtml(p.display_name)}</div></div>
+        </button>`).join('')}` : ''}
+      ${covenMatches.length ? `<div class="section-sub" style="margin:10px 0 6px">Covens</div>${covenMatches.map(c=>{
+        const col = tradColor(c.tradition);
+        return `<button class="dm-convo-row" data-action="open-coven" data-id="${c.id}">
+          <div class="avatar-sm" style="background:${col}22; color:${col}">${GLYPH[c.tradition]||'✦'}</div>
+          <div class="dm-convo-info"><div class="dm-convo-name">${escapeHtml(c.name)}</div></div>
+        </button>`;
+      }).join('')}` : ''}
+      ${postMatches.length ? `<div class="section-sub" style="margin:10px 0 6px">Publicações</div>${postMatches.map(p=>`
+        <div class="reflection-item"><b style="color:var(--text-hi)">${escapeHtml(p.user)}</b><div class="reflection-date">${p.time}</div>${escapeHtml(p.content).slice(0,140)}</div>
+      `).join('')}` : ''}
+    `;
+  }
+}
+
 /* ---------------- BADGES / CONQUISTAS ---------------- */
 const BADGE_DEFS = [
   {id:'buscador', label:'Buscador Dedicado', icon:'✦', hint:'Alcance 120 Mana', test:s=>s.mana_xp>=120},
@@ -3843,15 +3977,113 @@ async function openProfileModal(userId){
 
 /* ---------------- DENUNCIAR / BLOQUEAR ---------------- */
 function openPostMenu(postId, targetUserId, targetName, alreadyBlocked){
+  const isMine = targetUserId === state.profile.id;
   openModal(`
     <div class="modal-title">Mais opções</div>
     <div style="display:flex; flex-direction:column; gap:8px">
-      ${targetUserId ? `<button class="btn-ghost" style="width:100%" data-action="view-profile" data-id="${targetUserId}">Ver perfil${targetName? ' de '+escapeHtml(targetName):''}</button>` : ''}
-      ${postId ? `<button class="btn-ghost" style="width:100%" data-action="report-content" data-type="post" data-id="${postId}">Denunciar publicação</button>` : ''}
-      ${targetUserId ? `<button class="btn-ghost" style="width:100%" data-action="report-content" data-type="profile" data-id="${targetUserId}">Denunciar perfil</button>` : ''}
-      ${targetUserId ? `<button class="btn-ghost" style="width:100%; color:var(--danger)" data-action="block-user" data-target="${targetUserId}">${alreadyBlocked?'Desbloquear':'Bloquear'} ${targetName?escapeHtml(targetName):'usuário'}</button>` : ''}
+      ${!isMine && targetUserId ? `<button class="btn-ghost" style="width:100%" data-action="view-profile" data-id="${targetUserId}">Ver perfil${targetName? ' de '+escapeHtml(targetName):''}</button>` : ''}
+      ${isMine && postId ? `<button class="btn-ghost" style="width:100%" data-action="edit-post" data-id="${postId}">Editar publicação</button>` : ''}
+      ${isMine && postId ? `<button class="btn-ghost" style="width:100%; color:var(--danger)" data-action="delete-post" data-id="${postId}">Apagar publicação</button>` : ''}
+      ${!isMine && postId ? `<button class="btn-ghost" style="width:100%" data-action="report-content" data-type="post" data-id="${postId}">Denunciar publicação</button>` : ''}
+      ${!isMine && targetUserId ? `<button class="btn-ghost" style="width:100%" data-action="report-content" data-type="profile" data-id="${targetUserId}">Denunciar perfil</button>` : ''}
+      ${!isMine && targetUserId ? `<button class="btn-ghost" style="width:100%; color:var(--danger)" data-action="block-user" data-target="${targetUserId}">${alreadyBlocked?'Desbloquear':'Bloquear'} ${targetName?escapeHtml(targetName):'usuário'}</button>` : ''}
     </div>
   `);
+}
+function confirmDeletePost(postId){
+  openModal(`
+    <div class="modal-title">Apagar publicação</div>
+    <div class="node-sub" style="margin-bottom:16px">Essa ação não pode ser desfeita.</div>
+    <button class="btn-ghost" style="width:100%; color:var(--danger)" id="btnConfirmDeletePost">Apagar definitivamente</button>
+  `);
+  document.getElementById('btnConfirmDeletePost').addEventListener('click', async ()=>{
+    try{
+      await api.deletePost(postId);
+      state.posts = state.posts.filter(p=>p.id!==postId);
+      closeModal();
+      renderAgora();
+      toast('Publicação apagada.');
+    }catch(err){ console.error(err); toast('Não foi possível apagar agora.'); }
+  });
+}
+function openEditPostModal(postId){
+  const post = state.posts.find(p=>p.id===postId);
+  if(!post) return;
+  openModal(`
+    <div class="modal-title">Editar publicação</div>
+    <div class="form-field"><textarea id="editPostContent" maxlength="1000">${escapeHtml(post.content)}</textarea></div>
+    <button class="btn-primary" style="width:100%" id="btnSaveEditPost">Salvar</button>
+  `);
+  document.getElementById('btnSaveEditPost').addEventListener('click', async (ev)=>{
+    const val = document.getElementById('editPostContent').value.trim();
+    if(!val){ toast('A publicação não pode ficar vazia.'); return; }
+    const btn = ev.currentTarget;
+    btn.disabled = true; btn.textContent = 'Salvando…';
+    try{
+      await api.updatePost(postId, val);
+      post.content = val;
+      closeModal();
+      renderAgora();
+      toast('Publicação atualizada ✦');
+    }catch(err){
+      btn.disabled = false; btn.textContent = 'Salvar';
+      toast('Não foi possível salvar agora.');
+      console.error(err);
+    }
+  });
+}
+
+/* ---------------- EDITAR/APAGAR PUBLICAÇÃO NO COVEN ---------------- */
+function openCovenPostMenu(postId){
+  openModal(`
+    <div class="modal-title">Mais opções</div>
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <button class="btn-ghost" style="width:100%" data-action="edit-coven-post" data-id="${postId}">Editar publicação</button>
+      <button class="btn-ghost" style="width:100%; color:var(--danger)" data-action="delete-coven-post" data-id="${postId}">Apagar publicação</button>
+    </div>
+  `);
+}
+function confirmDeleteCovenPost(postId){
+  openModal(`
+    <div class="modal-title">Apagar publicação</div>
+    <div class="node-sub" style="margin-bottom:16px">Essa ação não pode ser desfeita.</div>
+    <button class="btn-ghost" style="width:100%; color:var(--danger)" id="btnConfirmDeleteCovenPost">Apagar definitivamente</button>
+  `);
+  document.getElementById('btnConfirmDeleteCovenPost').addEventListener('click', async ()=>{
+    try{
+      await api.deleteCovenPost(postId);
+      if(covenWallState) covenWallState.posts = covenWallState.posts.filter(p=>p.id!==postId);
+      closeModal();
+      renderCovenWallList();
+      toast('Publicação apagada.');
+    }catch(err){ console.error(err); toast('Não foi possível apagar agora.'); }
+  });
+}
+function openEditCovenPostModal(postId){
+  const post = covenWallState?.posts.find(p=>p.id===postId);
+  if(!post) return;
+  openModal(`
+    <div class="modal-title">Editar publicação</div>
+    <div class="form-field"><textarea id="editCovenPostContent" maxlength="1000">${escapeHtml(post.content)}</textarea></div>
+    <button class="btn-primary" style="width:100%" id="btnSaveEditCovenPost">Salvar</button>
+  `);
+  document.getElementById('btnSaveEditCovenPost').addEventListener('click', async (ev)=>{
+    const val = document.getElementById('editCovenPostContent').value.trim();
+    if(!val){ toast('A publicação não pode ficar vazia.'); return; }
+    const btn = ev.currentTarget;
+    btn.disabled = true; btn.textContent = 'Salvando…';
+    try{
+      await api.updateCovenPost(postId, val);
+      post.content = val;
+      closeModal();
+      renderCovenWallList();
+      toast('Publicação atualizada ✦');
+    }catch(err){
+      btn.disabled = false; btn.textContent = 'Salvar';
+      toast('Não foi possível salvar agora.');
+      console.error(err);
+    }
+  });
 }
 function confirmBlockUser(targetId){
   const alreadyBlocked = state.blockedIds.has(targetId);
@@ -4269,6 +4501,7 @@ function covenPostCardHtml(p){
           <div class="post-sub"><span class="post-time">${relativeTime(p.created_at)}</span></div>
         </div>
       </div>
+      ${p.user_id===state.profile.id ? `<button class="post-kebab" data-action="coven-post-menu" data-id="${p.id}" aria-label="Mais opções">⋯</button>` : ''}
     </div>
     <div class="post-text">${escapeHtml(p.content)}</div>
     ${p.media_url ? `<img class="post-photo" src="${escapeHtml(p.media_url)}" alt="" loading="lazy">` : ''}
@@ -4353,7 +4586,7 @@ async function openCovenWall(covenId){
       covenWallState.photoBlob = null;
       document.getElementById('covenPhotoPreview').innerHTML = '';
       covenWallState.posts.unshift({
-        id: row.id, content: row.content, media_url: row.media_url, created_at: row.created_at,
+        id: row.id, user_id: state.profile.id, content: row.content, media_url: row.media_url, created_at: row.created_at,
         author_name: state.profile.display_name, likes_count: 0, comments_count: 0
       });
       renderCovenWallList();
@@ -4403,6 +4636,7 @@ async function sendCovenComment(postId){
       post._comments = [...(post._comments||[]), {...row, author_name: state.profile.display_name}];
       post.comments_count = (post.comments_count||0) + 1;
       renderCovenWallList();
+      if(post.user_id) api.createNotification(post.user_id, state.profile.id, 'coven_post_comment', covenWallState.covenId).catch(console.error);
     }
   }catch(err){ console.error(err); toast('Não foi possível comentar agora.'); }
 }
@@ -4415,7 +4649,9 @@ async function toggleCovenLike(postId){
   else{ state.myCovenPostLikeIds.add(postId); post.likes_count = (post.likes_count||0)+1; }
   renderCovenWallList();
   const call = wasLiked ? api.unlikeCovenPost(postId, state.profile.id) : api.likeCovenPost(postId, state.profile.id);
-  call.catch(err=>{
+  call.then(()=>{
+    if(!wasLiked && post.user_id) api.createNotification(post.user_id, state.profile.id, 'coven_post_like', covenWallState.covenId).catch(console.error);
+  }).catch(err=>{
     if(wasLiked){ state.myCovenPostLikeIds.add(postId); post.likes_count = (post.likes_count||0)+1; }
     else{ state.myCovenPostLikeIds.delete(postId); post.likes_count = Math.max(0, (post.likes_count||0)-1); }
     renderCovenWallList();
@@ -4461,6 +4697,7 @@ function handleCovenToggleMod(covenId, userId, currentRole){
   const newRole = currentRole==='moderator' ? 'member' : 'moderator';
   api.updateCovenMemberRole(covenId, userId, newRole).then(()=>{
     toast(newRole==='moderator' ? 'Agora é moderador(a) ✦' : 'Deixou de ser moderador(a).');
+    if(newRole==='moderator') api.createNotification(userId, state.profile.id, 'coven_promote', covenId).catch(console.error);
     openCovenMembersModal(covenId);
   }).catch(err=>{ console.error(err); toast('Não foi possível atualizar o papel agora.'); });
 }
@@ -4470,6 +4707,7 @@ function handleCovenRemoveMember(covenId, userId){
     if(coven) coven.memberCount = Math.max(0, coven.memberCount-1);
     renderCovens();
     toast('Membro removido do coven.');
+    api.createNotification(userId, state.profile.id, 'coven_remove', covenId).catch(console.error);
     openCovenMembersModal(covenId);
   }).catch(err=>{ console.error(err); toast('Não foi possível remover esse membro.'); });
 }
