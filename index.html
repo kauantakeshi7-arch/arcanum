@@ -6,7 +6,7 @@
 <title>Arcanum</title>
 <meta name="description" content="Sua Ágora, seu Altar e seu Grimório digital.">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#061410">
+<meta name="theme-color" content="#0A0918">
 <link rel="icon" href="/icons/icon-512.png" type="image/png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,20 +18,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap');
 
 :root{
-  --void:#061410;
-  --panel:#0D2019;
-  --panel-2:#12352A;
-  --panel-3:#173F32;
-  --line:rgba(199,158,90,0.22);
-  --line-soft:rgba(199,158,90,0.12);
+  --void:#0A0918;
+  --panel:#14122A;
+  --panel-2:#1B1838;
+  --panel-3:#232047;
+  --line:rgba(212,168,83,0.20);
+  --line-soft:rgba(212,168,83,0.11);
   --gold:#D4A853;
-  --gold-soft:#E8C989;
+  --gold-soft:#F0C878;
   --violet:#8B6CF2;
   --violet-soft:#B3A0F7;
+  --nebula-pink:#C363D9;
   --emerald:#34C79A;
-  --text-hi:#F1EEE2;
-  --text-mid:#AEBDB3;
-  --text-low:#84948A;
+  --text-hi:#F2EEF7;
+  --text-mid:#ADA6C4;
+  --text-low:#847EA0;
   --danger:#D16B6B;
   --font-display:'Cormorant Garamond', serif;
   --font-body:'Inter', sans-serif;
@@ -64,9 +65,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   height:100vh;
   height:100dvh;
   background:
-    radial-gradient(ellipse 700px 400px at 15% -5%, rgba(52,199,154,0.16), transparent 60%),
-    radial-gradient(ellipse 600px 400px at 100% 15%, rgba(212,168,83,0.10), transparent 60%),
-    radial-gradient(ellipse 800px 600px at 50% 110%, rgba(139,108,242,0.06), transparent 60%),
+    radial-gradient(ellipse 750px 450px at 12% -8%, rgba(139,108,242,0.22), transparent 60%),
+    radial-gradient(ellipse 650px 450px at 102% 10%, rgba(195,99,217,0.13), transparent 60%),
+    radial-gradient(ellipse 800px 600px at 50% 112%, rgba(212,168,83,0.09), transparent 60%),
     var(--void);
   display:flex;
   position:relative;
@@ -897,7 +898,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 /* ---------- BOTTOM NAV & MINI PLAYER ---------- */
 .mini-player{
   position:absolute; left:12px; right:12px; bottom:76px; z-index:14;
-  background:rgba(13,32,25,0.92); backdrop-filter:blur(10px);
+  background:rgba(20,18,42,0.92); backdrop-filter:blur(10px);
   border:1px solid var(--line); border-radius:14px;
   padding:9px 12px; display:none; align-items:center; gap:10px;
   box-shadow:0 8px 24px rgba(0,0,0,0.4);
@@ -915,7 +916,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   position:relative; z-index:20;
   display:flex; justify-content:space-around; align-items:center;
   padding:9px 6px 12px;
-  background:rgba(11,27,21,0.85); backdrop-filter:blur(14px);
+  background:rgba(15,13,34,0.85); backdrop-filter:blur(14px);
   border-top:1px solid var(--line);
   flex-shrink:0;
 }
@@ -997,7 +998,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 /* ---------- TOASTS ---------- */
 .toast-wrap{position:absolute; top:70px; left:0; right:0; display:flex; flex-direction:column; align-items:center; gap:8px; z-index:60; pointer-events:none;}
 .toast{
-  background:rgba(14,35,28,0.95); border:1px solid var(--line); color:var(--text-hi);
+  background:rgba(19,17,40,0.95); border:1px solid var(--line); color:var(--text-hi);
   font-size:12.5px; font-weight:500; padding:9px 16px; border-radius:20px;
   box-shadow:0 6px 18px rgba(0,0,0,0.4);
   animation:toast-in .25s ease-out, toast-out .3s ease-in 1.9s forwards;
@@ -1012,12 +1013,22 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   position:fixed; inset:0; z-index:100;
   display:flex; align-items:center; justify-content:center;
   background:
-    radial-gradient(ellipse 800px 500px at 12% -8%, rgba(52,199,154,0.24), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 105% 10%, rgba(212,168,83,0.14), transparent 60%),
-    radial-gradient(ellipse 900px 700px at 50% 115%, rgba(139,108,242,0.07), transparent 60%),
+    radial-gradient(ellipse 850px 550px at 12% -8%, rgba(139,108,242,0.28), transparent 60%),
+    radial-gradient(ellipse 750px 550px at 105% 8%, rgba(195,99,217,0.16), transparent 60%),
+    radial-gradient(ellipse 900px 700px at 50% 115%, rgba(212,168,83,0.10), transparent 60%),
     var(--void);
   padding:20px;
   overflow:hidden;
+}
+.auth-nebula{
+  position:absolute; inset:-10%; pointer-events:none;
+  background:
+    radial-gradient(ellipse 420px 300px at 25% 20%, rgba(139,108,242,0.30), transparent 65%),
+    radial-gradient(ellipse 380px 320px at 78% 32%, rgba(195,99,217,0.22), transparent 65%),
+    radial-gradient(ellipse 460px 260px at 55% 78%, rgba(212,168,83,0.14), transparent 65%),
+    radial-gradient(ellipse 300px 240px at 15% 82%, rgba(52,199,154,0.10), transparent 65%);
+  filter:blur(38px);
+  opacity:0.85;
 }
 .auth-glyphs{
   position:absolute; inset:0; pointer-events:none; opacity:0.16;
@@ -1083,7 +1094,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .auth-card{
   position:relative; z-index:2;
   width:100%; max-width:380px;
-  background:linear-gradient(175deg, rgba(18,53,42,0.92), rgba(13,32,25,0.94));
+  background:linear-gradient(175deg, rgba(27,24,56,0.90), rgba(15,13,32,0.94));
   backdrop-filter:blur(6px);
   border:1px solid var(--line);
   border-radius:22px;
@@ -1165,6 +1176,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 
 <!-- AUTH GATE (shown until a Supabase session exists) -->
 <div class="auth-screen" id="authScreen">
+  <div class="auth-nebula" aria-hidden="true"></div>
   <div class="auth-stars" aria-hidden="true"></div>
   <div class="auth-glyphs" aria-hidden="true">
     <span>☿</span><span>♄</span><span>☽</span><span>♀</span><span>⚸</span><span>☉</span><span>♃</span><span>♆</span><span>✦</span>
@@ -1878,7 +1890,7 @@ function showStoryItem(){
   const media = document.getElementById('storyViewerMedia');
   media.innerHTML = item.mediaUrl
     ? `<img src="${escapeHtml(item.mediaUrl)}" alt="">`
-    : `<div class="story-text-card" style="background:linear-gradient(160deg, ${item.bgColor||'#8B6CF2'}, #061410)">${escapeHtml(item.textContent||'')}</div>`;
+    : `<div class="story-text-card" style="background:linear-gradient(160deg, ${item.bgColor||'#8B6CF2'}, #0A0918)">${escapeHtml(item.textContent||'')}</div>`;
 
   const vc = document.getElementById('storyViewerViewCount');
   if(group.userId===state.profile.id){
@@ -4338,7 +4350,7 @@ function downloadCardImage(title, lines, filename){
   canvas.width = 800; canvas.height = 1000;
   const ctx = canvas.getContext('2d');
   const grad = ctx.createLinearGradient(0, 0, 0, 1000);
-  grad.addColorStop(0, '#12352A'); grad.addColorStop(1, '#061410');
+  grad.addColorStop(0, '#1B1838'); grad.addColorStop(1, '#0A0918');
   ctx.fillStyle = grad; ctx.fillRect(0, 0, 800, 1000);
   ctx.strokeStyle = 'rgba(212,168,83,0.4)'; ctx.lineWidth = 2;
   ctx.strokeRect(20, 20, 760, 960);
