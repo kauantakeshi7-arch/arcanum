@@ -4,7 +4,18 @@ import { supabase } from './supabaseClient.js';
 export async function fetchPosts(limit = 50) {
   const { data, error } = await supabase
     .from('posts_with_counts')
-    .select('*, profiles!user_id(display_name, religion_path)')
+    .select('*, profiles!user_id(display_name, religion_path, is_verified)')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchUserPosts(userId, limit = 30) {
+  const { data, error } = await supabase
+    .from('posts_with_counts')
+    .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;
@@ -395,10 +406,99 @@ export async function createSacredPlace({ name, category, address, city, latitud
 export async function searchProfiles(query, excludeId, limit = 8) {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, display_name, username')
+    .select('id, display_name, username, is_verified')
     .ilike('display_name', `%${query}%`)
     .neq('id', excludeId)
     .limit(limit);
   if (error) throw error;
   return data;
+}
+
+/* ---------------- PERFIL PÚBLICO ---------------- */
+export async function fetchPublicProfile(userId) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, display_name, religion_path, mana_xp, streak_days, is_verified, created_at')
+    .eq('id', userId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/* ---------------- SEGUIR ---------------- */
+export async function followUser(followerId, followingId) {
+  const { error } = await supabase.from('follows').insert({ follower_id: followerId, following_id: followingId });
+  if (error) throw error;
+}
+
+export async function unfollowUser(followerId, followingId) {
+  const { error } = await supabase.from('follows').delete().eq('follower_id', followerId).eq('following_id', followingId);
+  if (error) throw error;
+}
+
+export async function fetchFollowingIds(userId) {
+  const { data, error } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
+  if (error) throw error;
+  return new Set(data.map(r => r.following_id));
+}
+
+export async function fetchFollowCounts(userId) {
+  const [followers, following] = await Promise.all([
+    supabase.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', userId),
+    supabase.from('follows').select('following_id', { count: 'exact', head: true }).eq('follower_id', userId)
+  ]);
+  if (followers.error) throw followers.error;
+  if (following.error) throw following.error;
+  return { followers: followers.count || 0, following: following.count || 0 };
+}
+
+/* ---------------- BLOQUEAR ---------------- */
+export async function blockUser(blockerId, blockedId) {
+  const { error } = await supabase.from('blocks').insert({ blocker_id: blockerId, blocked_id: blockedId });
+  if (error) throw error;
+  // Deixar de seguir/ser seguido silenciosamente ao bloquear.
+  await supabase.from('follows').delete().eq('follower_id', blockerId).eq('following_id', blockedId);
+  await supabase.from('follows').delete().eq('follower_id', blockedId).eq('following_id', blockerId);
+}
+
+export async function unblockUser(blockerId, blockedId) {
+  const { error } = await supabase.from('blocks').delete().eq('blocker_id', blockerId).eq('blocked_id', blockedId);
+  if (error) throw error;
+}
+
+export async function fetchBlockedIds(userId) {
+  const { data, error } = await supabase.from('blocks').select('blocked_id').eq('blocker_id', userId);
+  if (error) throw error;
+  return new Set(data.map(r => r.blocked_id));
+}
+
+/* ---------------- DENUNCIAR ---------------- */
+export async function reportContent({ reporterId, targetType, targetId, reason }) {
+  const { error } = await supabase.from('reports').insert({ reporter_id: reporterId, target_type: targetType, target_id: targetId, reason });
+  if (error) throw error;
+}
+
+/* ---------------- BADGES (contagens para conquistas) ---------------- */
+export async function fetchUserCovenFoundedCount(userId) {
+  const { count, error } = await supabase.from('covens').select('id', { count: 'exact', head: true }).eq('created_by', userId);
+  if (error) throw error;
+  return count || 0;
+}
+
+export async function fetchUserGratitudeCount(userId) {
+  const { count, error } = await supabase.from('gratitude_testimonials').select('id', { count: 'exact', head: true }).eq('user_id', userId);
+  if (error) throw error;
+  return count || 0;
+}
+
+export async function fetchUserLunarCompletionCount(userId) {
+  const { count, error } = await supabase.from('quest_completions').select('quest_id', { count: 'exact', head: true }).eq('user_id', userId);
+  if (error) throw error;
+  return count || 0;
+}
+
+export async function fetchUserCandleLightsCount(userId) {
+  const { count, error } = await supabase.from('candle_lights').select('candle_id', { count: 'exact', head: true }).eq('user_id', userId);
+  if (error) throw error;
+  return count || 0;
 }

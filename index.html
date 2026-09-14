@@ -254,6 +254,10 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 }
 .post-accent{position:absolute; top:0; left:0; right:0; height:2.5px;}
 .post-head{display:flex; align-items:center; gap:9px; margin-bottom:10px;}
+.post-head-link{display:flex; align-items:center; gap:9px; flex:1; min-width:0; text-align:left; background:none; border:none; padding:0; cursor:pointer;}
+.post-kebab{flex-shrink:0; font-size:18px; color:var(--text-low); padding:4px 8px; line-height:1; background:none; border:none; cursor:pointer;}
+.post-kebab:hover{color:var(--text-hi);}
+.verified-badge{display:inline-block; width:13px; height:13px; margin-left:4px; vertical-align:-2px; color:var(--gold-soft);}
 .avatar-sm{
   width:34px; height:34px; border-radius:50%; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
@@ -679,6 +683,8 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .profile-name{font-family:var(--font-display); font-size:24px; font-weight:600;}
 .profile-grade{font-size:12.5px; color:var(--gold-soft); margin-top:2px; font-weight:600;}
 .familiar-tag{font-size:11px; color:var(--text-low); margin-top:4px;}
+.follow-counts-row{display:flex; gap:18px; margin-top:8px; font-size:12.5px; color:var(--text-mid);}
+.follow-counts-row b{color:var(--text-hi);}
 .shop-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;}
 .shop-item{
   display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
@@ -690,6 +696,22 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .shop-item-label{font-size:11.5px; color:var(--text-mid); line-height:1.3;}
 .shop-btn{width:100%; font-size:11.5px; padding:7px 10px;}
 .sacred-map-container{height:260px; border-radius:14px; overflow:hidden; margin-bottom:12px; border:1px solid var(--line); background:var(--panel-2);}
+.profile-modal-top{display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; margin-bottom:6px;}
+.profile-modal-name{font-family:var(--font-display); font-size:19px; color:var(--text-hi);}
+.badges-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:6px;}
+.badge-item{display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center; padding:10px 4px; border-radius:12px; background:var(--panel); border:1px solid var(--line);}
+.badge-item.achieved{border-color:rgba(212,168,83,0.4); box-shadow:0 0 10px rgba(212,168,83,0.12) inset;}
+.badge-item.locked{opacity:0.35;}
+.badge-icon{font-size:20px;}
+.badge-label{font-size:9.5px; color:var(--text-mid); line-height:1.2;}
+.public-post-item{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px;}
+.public-post-time{font-size:10.5px; color:var(--text-low); margin-bottom:4px;}
+.public-post-text{font-size:12.5px; color:var(--text-mid); line-height:1.5; white-space:pre-wrap;}
+.glossary-list{max-height:280px; overflow-y:auto; margin-bottom:8px; display:flex; flex-direction:column; gap:8px;}
+.glossary-item{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 12px;}
+.glossary-term{font-size:13px; font-weight:600; color:var(--text-hi); margin-bottom:3px;}
+.glossary-cat{font-size:10px; font-weight:500; color:var(--gold-soft); margin-left:4px;}
+.glossary-desc{font-size:11.5px; color:var(--text-mid); line-height:1.45;}
 .leaflet-popup-content-wrapper{background:var(--panel-2); color:var(--text-hi); border-radius:10px;}
 .leaflet-popup-tip{background:var(--panel-2);}
 .mana-bar-wrap{width:100%; margin-top:14px;}
@@ -1297,6 +1319,12 @@ function escapeHtml(str){
 function tradColor(t){ return (TRADITIONS[t]||TRADITIONS.solitario).color; }
 function tradLabel(t){ return (TRADITIONS[t]||TRADITIONS.solitario).label; }
 function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+function inviteLink(userId){
+  return `${window.location.origin}${window.location.pathname}?ref=${userId}`;
+}
+function verifiedBadgeSVG(){
+  return '<svg class="verified-badge" viewBox="0 0 24 24" fill="currentColor" title="Perfil verificado"><path d="M12 2l2.4 2.1 3.1-.4 1 3 2.9 1.4-.6 3.1 1.9 2.5-1.9 2.5.6 3.1-2.9 1.4-1 3-3.1-.4L12 22l-2.4-2.1-3.1.4-1-3-2.9-1.4.6-3.1L1.3 10l1.9-2.5-.6-3.1L5.5 3l1-3 3.1.4z"/><path d="M9 12.5l2 2 4-4.5" fill="none" stroke="#1a1420" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
 
 /* ---------------- STATE ---------------- */
 const state = {
@@ -1314,6 +1342,9 @@ const state = {
   posts:[],
   myLikedPostIds: new Set(),
   myLitCandleIds: new Set(),
+  followingIds: new Set(),
+  blockedIds: new Set(),
+  followCounts: {followers:0, following:0},
   lunarQuests: [],
   myQuestCompletionIds: new Set(),
   veilHistory: [],
@@ -1533,6 +1564,7 @@ function altarPhotoSVG(seed){
 function feedFiltered(){
   if(state.feedTab==='minha-senda') return state.posts.filter(p=>p.trad===state.profile.religion_path);
   if(state.feedTab==='covens') return state.posts.filter(p=>['umbanda','quimbanda'].includes(p.trad));
+  if(state.feedTab==='seguindo') return state.posts.filter(p=>state.followingIds.has(p.userId));
   return state.posts;
 }
 function renderPostCard(p, idx){
@@ -1551,14 +1583,17 @@ function renderPostCard(p, idx){
   <div class="card">
     <div class="post-accent" style="background:linear-gradient(90deg, ${c}, ${c}00)"></div>
     <div class="post-head">
-      <div class="avatar-sm" style="background:linear-gradient(145deg, ${c}, ${c}cc); box-shadow:0 0 0 2px ${c}33, 0 3px 8px ${c}40">${initials(p.user)}</div>
-      <div class="post-meta">
-        <div class="post-name">${escapeHtml(p.user)}</div>
-        <div class="post-sub">
-          <span class="trad-badge" style="color:${c}; border-color:${c}55; background:${c}14">${GLYPH[p.trad]||'✦'} ${tradLabel(p.trad)}</span>
-          <span class="post-time">${p.time}</span>
+      <button class="post-head-link" data-action="view-profile" data-id="${p.userId}">
+        <div class="avatar-sm" style="background:linear-gradient(145deg, ${c}, ${c}cc); box-shadow:0 0 0 2px ${c}33, 0 3px 8px ${c}40">${initials(p.user)}</div>
+        <div class="post-meta">
+          <div class="post-name">${escapeHtml(p.user)}${p.verified?verifiedBadgeSVG():''}</div>
+          <div class="post-sub">
+            <span class="trad-badge" style="color:${c}; border-color:${c}55; background:${c}14">${GLYPH[p.trad]||'✦'} ${tradLabel(p.trad)}</span>
+            <span class="post-time">${p.time}</span>
+          </div>
         </div>
-      </div>
+      </button>
+      <button class="post-kebab" data-action="open-post-menu" data-id="${p.id}" aria-label="Mais opções">⋯</button>
     </div>
     ${body}
     <div class="reaction-bar">
@@ -1588,7 +1623,7 @@ function renderPostCard(p, idx){
   </div>`;
 }
 function renderAgora(){
-  const tabs = [['para-voce','Para Você'],['minha-senda','Minha Senda'],['covens','Meus Covens']];
+  const tabs = [['para-voce','Para Você'],['seguindo','Seguindo'],['minha-senda','Minha Senda'],['covens','Meus Covens']];
   const posts = feedFiltered();
   document.getElementById('screen-agora').innerHTML = `
     <div class="feed-tabs">
@@ -1957,14 +1992,73 @@ function renderSantuario(){
       </div>
     </div>
 
-    <div class="section-head"><div class="section-title" style="font-size:19px">Grimório Digital</div></div>
-    <button class="btn-ghost" style="width:100%; margin-bottom:4px" id="btnNewGrim">+ Novo registro</button>
+    <div class="section-head"><div class="section-title" style="font-size:19px">📖 Glossário de Correspondências</div>
+      <div class="section-sub">Ervas, cristais, Orixás/Guias e dias planetários</div></div>
+    <div class="form-field"><input type="text" id="glossarySearch" placeholder="Buscar um termo…" autocomplete="off"></div>
+    <div id="glossaryResults" class="glossary-list">${renderGlossaryList('')}</div>
+
+    <div class="section-head" style="margin-top:24px">
+      <div class="section-title" style="font-size:19px">Grimório Digital</div>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:4px">
+      <button class="btn-ghost" style="flex:1" id="btnNewGrim">+ Novo registro</button>
+      <button class="btn-ghost" style="flex:1" id="btnExportGrimoire">Exportar PDF</button>
+    </div>
     ${grimHtml}
   `;
   setupSigilCanvas();
   document.getElementById('btnCalcAlchemy').addEventListener('click', renderAlchemyResult);
+  const glossaryInput = document.getElementById('glossarySearch');
+  glossaryInput.addEventListener('input', ()=>{
+    const results = document.getElementById('glossaryResults');
+    if(results) results.innerHTML = renderGlossaryList(glossaryInput.value);
+  });
 }
 
+/* ---------------- GLOSSÁRIO DE CORRESPONDÊNCIAS MÁGICAS ---------------- */
+const GLOSSARY_CATEGORIES = {erva:'🌿 Erva', cristal:'🔮 Cristal', orixa:'✦ Orixá/Guia', planeta:'🪐 Planeta/Dia'};
+const MAGIC_GLOSSARY = [
+  {term:'Arruda', category:'erva', description:'Proteção e descarrego. Usada em banhos e defumações contra olho gordo e energias pesadas.'},
+  {term:'Alecrim', category:'erva', description:'Abertura de caminhos, clareza mental e prosperidade. Associado ao Sol e a Mercúrio.'},
+  {term:'Guiné', category:'erva', description:'Proteção forte contra magias e invejas. Tradicionalmente plantada à porta de casa.'},
+  {term:'Espada de São Jorge', category:'erva', description:'Corte de demandas e proteção da casa; associada a Ogum e à firmeza guerreira.'},
+  {term:'Losna', category:'erva', description:'Limpeza espiritual profunda e clarividência; usada em banhos de descarrego.'},
+  {term:'Manjericão', category:'erva', description:'Prosperidade, harmonia doméstica e atração de bons fluidos.'},
+  {term:'Pau-santo', category:'erva', description:'Defumação de limpeza e elevação espiritual, muito usada em rituais contemporâneos.'},
+  {term:'Alfazema/Lavanda', category:'erva', description:'Paz, sono tranquilo e harmonização emocional.'},
+  {term:'Quartzo Transparente', category:'cristal', description:'Amplificador universal de energia e intenção; "o cristal-mestre".'},
+  {term:'Ametista', category:'cristal', description:'Espiritualidade, intuição e proteção psíquica; ajuda na meditação.'},
+  {term:'Turmalina Negra', category:'cristal', description:'Proteção e aterramento; absorve energias densas e negativas.'},
+  {term:'Citrino', category:'cristal', description:'Prosperidade, abundância e vitalidade; raramente precisa de limpeza energética.'},
+  {term:'Pirita', category:'cristal', description:'Prosperidade material e proteção; conhecida como "ouro dos tolos" pela cor dourada.'},
+  {term:'Quartzo Rosa', category:'cristal', description:'Amor próprio, cura emocional e relações harmoniosas.'},
+  {term:'Obsidiana', category:'cristal', description:'Proteção intensa e corte de laços energéticos negativos.'},
+  {term:'Oxóssi', category:'orixa', description:'Orixá da caça e da mata, regente da abundância, da fartura e do conhecimento. Cor: verde.'},
+  {term:'Ogum', category:'orixa', description:'Orixá guerreiro, senhor dos caminhos e do ferro; associado à coragem e à conquista. Cor: azul ou vermelho.'},
+  {term:'Iemanjá', category:'orixa', description:'Rainha do mar, mãe de todos os Orixás; associada à maternidade e à intuição. Cor: azul claro/branco.'},
+  {term:'Oxum', category:'orixa', description:'Orixá das águas doces, do amor, da beleza e da prosperidade. Cor: dourado/amarelo.'},
+  {term:'Xangô', category:'orixa', description:'Orixá da justiça, do trovão e da lei; pune injustiças com o machado duplo (oxé). Cor: marrom/branco.'},
+  {term:'Exu', category:'orixa', description:'Guardião dos caminhos e das encruzilhadas; mensageiro entre os planos. Sem ele, nenhum trabalho se completa.'},
+  {term:'Pombagira', category:'orixa', description:'Entidade feminina da Quimbanda, senhora do amor, da sedução e da liberdade feminina.'},
+  {term:'Domingo — Sol', category:'planeta', description:'Vitalidade, sucesso e clareza. Bom para rituais de conquista e autoestima.'},
+  {term:'Segunda — Lua', category:'planeta', description:'Intuição, emoções e o lar. Ideal para rituais de introspecção e sonhos.'},
+  {term:'Terça — Marte', category:'planeta', description:'Coragem, ação e proteção. Favorece rompimentos de demanda e coragem para agir.'},
+  {term:'Quarta — Mercúrio', category:'planeta', description:'Comunicação, comércio e viagens. Bom para negociações e abertura de caminhos.'},
+  {term:'Quinta — Júpiter', category:'planeta', description:'Expansão, sorte e prosperidade. Favorece rituais de crescimento financeiro.'},
+  {term:'Sexta — Vênus', category:'planeta', description:'Amor, beleza e harmonia. Ideal para trabalhos afetivos e de autoestima.'},
+  {term:'Sábado — Saturno', category:'planeta', description:'Encerramentos, limites e disciplina. Bom para banimentos e cortes de ciclo.'}
+];
+function renderGlossaryList(query){
+  const q = (query||'').trim().toLowerCase();
+  const items = MAGIC_GLOSSARY.filter(g => !q || g.term.toLowerCase().includes(q) || g.description.toLowerCase().includes(q));
+  if(!items.length) return '<div class="empty-hint">Nenhum termo encontrado.</div>';
+  return items.map(g=>`
+    <div class="glossary-item">
+      <div class="glossary-term">${escapeHtml(g.term)} <span class="glossary-cat">${GLOSSARY_CATEGORIES[g.category]}</span></div>
+      <div class="glossary-desc">${escapeHtml(g.description)}</div>
+    </div>
+  `).join('');
+}
 const ALCHEMY_RECIPES = {
   caminhos: {label:'Abertura de Caminhos', herbs:['Alecrim','Guiné','Arruda'], moon:'Lua Crescente', day:'Segunda-feira', planet:'Mercúrio', candle:'Amarela ou Dourada'},
   protecao: {label:'Proteção / Descarrego', herbs:['Arruda','Guiné','Comigo-Ninguém-Pode'], moon:'Lua Minguante', day:'Sábado', planet:'Saturno', candle:'Preta ou Branca'},
@@ -1986,9 +2080,21 @@ function renderAlchemyResult(){
       <div class="alchemy-row"><span>📅 Dia regente</span><b>${r.day}</b></div>
       <div class="alchemy-row"><span>☉ Planeta regente</span><b>${r.planet}</b></div>
       <div class="alchemy-row"><span>🕯️ Cor da vela</span><b>${r.candle}</b></div>
-      <button class="btn-ghost" style="width:100%; margin-top:10px" id="btnSaveAlchemy">Guardar no Grimório</button>
+      <div style="display:flex; gap:8px; margin-top:10px">
+        <button class="btn-ghost" style="flex:1" id="btnSaveAlchemy">Guardar no Grimório</button>
+        <button class="btn-ghost" style="flex:1" id="btnShareAlchemy">Baixar imagem</button>
+      </div>
     </div>`;
   document.getElementById('btnSaveAlchemy').addEventListener('click', (ev)=>saveAlchemyToGrimoire(key, ev.currentTarget));
+  document.getElementById('btnShareAlchemy').addEventListener('click', ()=>{
+    downloadCardImage('✦ ' + r.label, [
+      `Ervas: ${r.herbs.join(', ')}`,
+      `Fase lunar ideal: ${r.moon}`,
+      `Dia regente: ${r.day}`,
+      `Planeta regente: ${r.planet}`,
+      `Cor da vela: ${r.candle}`
+    ], 'arcanum-receita.png');
+  });
 }
 
 function saveAlchemyToGrimoire(key, btn){
@@ -2164,7 +2270,10 @@ function renderVeilOracleCard(){
     <div class="tarot-spread-interpretation">
       No <b>Passado</b>, ${spread[0].card.name} moldou o terreno onde você pisa. No <b>Presente</b>, ${spread[1].card.name} mostra a energia que pede atenção agora. E no <b>Futuro</b>, ${spread[2].card.name} aponta para onde esse fio pode te levar — se você seguir o convite dele.
     </div>
-    <button class="btn-ghost" style="width:100%; margin-top:10px" data-action="draw-tarot-spread">Tirar novamente</button>
+    <div style="display:flex; gap:8px; margin-top:10px">
+      <button class="btn-ghost" style="flex:1" data-action="draw-tarot-spread">Tirar novamente</button>
+      <button class="btn-ghost" style="flex:1" data-action="share-tarot-image">Baixar imagem</button>
+    </div>
   ` : `
     <div class="node-sub" style="margin-bottom:12px">Mentalize uma pergunta e revele Passado, Presente e Futuro em três cartas.</div>
     <button class="btn-primary" style="width:100%" data-action="draw-tarot-spread">Tirar as 3 Cartas</button>
@@ -2537,9 +2646,13 @@ function renderPerfil(){
     <div class="profile-top">
       <div class="avatar-stage">${renderAvatarSVG()}</div>
       <div class="profile-name">${p.display_name}</div>
-      <div class="profile-grade">Grau ${grade} · ${GRADES[grade]}</div>
+      <div class="profile-grade">Grau ${grade} · ${GRADES[grade]}${p.isVerified?verifiedBadgeSVG():''}</div>
       <div class="familiar-tag">Familiar Astral: ${FAMILIAR_STAGES[stage]}</div>
       <div class="familiar-tag">${shopItem('item', p.avatarLayers.item).glyph} ${shopItem('item', p.avatarLayers.item).label}</div>
+      <div class="follow-counts-row">
+        <span><b>${state.followCounts.following}</b> Seguindo</span>
+        <span><b>${state.followCounts.followers}</b> Seguidores</span>
+      </div>
 
       <div class="mana-bar-wrap">
         <div class="mana-bar-track"><div class="mana-bar-fill" style="width:${(within/120*100)}%"></div></div>
@@ -2561,6 +2674,23 @@ function renderPerfil(){
       <button class="subtab ${state.profileSubtab==='reflexoes'?'active':''}" data-subtab="reflexoes">Reflexões</button>
     </div>
     ${state.profileSubtab==='grimorio' ? photosGrid : reflections}
+
+    <div class="section-head" style="margin-top:28px"><div class="section-title" style="font-size:19px">🏆 Conquistas</div>
+      <div class="section-sub">Marcos da sua jornada no Arcanum</div></div>
+    ${renderBadgesGrid({
+      mana_xp: p.mana_xp, streak_days: p.streak_days,
+      covensFounded: state.covens.filter(c=>c.createdBy===p.id).length,
+      gratitudeCount: state.gratitude.filter(g=>g.userId===p.id).length,
+      lunarCompletions: state.myQuestCompletionIds.size,
+      candleLights: state.myLitCandleIds.size
+    })}
+
+    <div class="section-head" style="margin-top:28px"><div class="section-title" style="font-size:19px">✦ Convide Amigos</div>
+      <div class="section-sub">Você e quem entrar pelo seu link ganham +50 Mana</div></div>
+    <div style="display:flex; gap:8px; margin-bottom:22px">
+      <input type="text" id="inviteLinkInput" readonly value="${escapeHtml(inviteLink(p.id))}" style="flex:1">
+      <button class="btn-primary" style="margin-top:0" id="btnCopyInvite">Copiar</button>
+    </div>
 
     <div class="section-head" style="margin-top:28px"><div class="section-title" style="font-size:19px">🛍️ Loja de Mana</div>
       <div class="section-sub">Gaste seu Mana acumulado para customizar seu avatar e seu altar</div></div>
@@ -2793,6 +2923,39 @@ document.addEventListener('click', (e)=>{
       ];
       renderEgregora();
     }
+    else if(action==='share-tarot-image'){
+      const spread = state.tarotSpread;
+      if(!spread) return;
+      downloadCardImage('Mesa de Tarot — 3 Cartas', [
+        `Passado: ${spread[0].card.name} — ${spread[0].card.meaning}`,
+        `Presente: ${spread[1].card.name} — ${spread[1].card.meaning}`,
+        `Futuro: ${spread[2].card.name} — ${spread[2].card.meaning}`
+      ], 'arcanum-tarot.png');
+    }
+    else if(action==='view-profile'){ openProfileModal(id); }
+    else if(action==='open-post-menu'){
+      const post = state.posts.find(p=>p.id===id);
+      if(post) openPostMenu(id, post.userId, post.user, state.blockedIds.has(post.userId));
+    }
+    else if(action==='follow-user'){
+      const target = act.dataset.target;
+      const wasFollowing = state.followingIds.has(target);
+      if(wasFollowing){ state.followingIds.delete(target); state.followCounts.following = Math.max(0, state.followCounts.following-1); }
+      else{ state.followingIds.add(target); state.followCounts.following += 1; }
+      const rerender = act.dataset.rerender;
+      if(rerender==='profile-modal') act.textContent = wasFollowing ? 'Seguir' : 'Deixar de seguir';
+      else if(rerender==='agora') renderAgora();
+      else if(rerender==='egregora') renderEgregora();
+      const call = wasFollowing ? api.unfollowUser(state.profile.id, target) : api.followUser(state.profile.id, target);
+      call.catch(err=>{
+        if(wasFollowing){ state.followingIds.add(target); state.followCounts.following += 1; }
+        else{ state.followingIds.delete(target); state.followCounts.following = Math.max(0, state.followCounts.following-1); }
+        toast('Não foi possível concluir agora.');
+        console.error(err);
+      });
+    }
+    else if(action==='block-user'){ confirmBlockUser(act.dataset.target); }
+    else if(action==='report-content'){ openReportModal(act.dataset.type, act.dataset.id); }
     else if(action==='close-modal'){ closeModal(); renderAll(); }
     else if(action==='set-candle'){ state.candleColor = act.dataset.color; renderSantuario(); }
     else if(action==='connect'){
@@ -2861,6 +3024,7 @@ document.addEventListener('click', (e)=>{
   if(e.target.id==='sideFabNewPost' || e.target.closest('#sideFabNewPost')){ setNav('agora'); openNewPostModal(); }
   if(e.target.id==='btnRevealOracle') revealOracle();
   if(e.target.id==='btnNewGrim') openNewGrimoireModal();
+  if(e.target.id==='btnExportGrimoire') exportGrimoirePDF();
   if(e.target.id==='btnAskVeil'){
     const input = document.getElementById('veilQuestionInput');
     const category = document.getElementById('veilCategory').value;
@@ -2870,6 +3034,15 @@ document.addEventListener('click', (e)=>{
     state.veilHistory.push({q, a: drawVeilResponse(category)});
     if(state.veilHistory.length > 5) state.veilHistory.shift();
     renderEgregora();
+  }
+  if(e.target.id==='btnCopyInvite'){
+    const input = document.getElementById('inviteLinkInput');
+    input.select();
+    navigator.clipboard?.writeText(input.value).then(()=>{
+      toast('Link de convite copiado ✦');
+    }).catch(()=>{
+      toast('Selecione e copie o link manualmente.');
+    });
   }
   if(e.target.id==='btnNewCandle') addNewCandle();
   if(e.target.id==='btnNewCoven') openNewCovenModal();
@@ -3035,6 +3208,141 @@ function openNewDmSearch(){
   });
 }
 
+/* ---------------- BADGES / CONQUISTAS ---------------- */
+const BADGE_DEFS = [
+  {id:'buscador', label:'Buscador Dedicado', icon:'✦', hint:'Alcance 120 Mana', test:s=>s.mana_xp>=120},
+  {id:'adepto', label:'Adepto do Caminho', icon:'🔥', hint:'Alcance 480 Mana', test:s=>s.mana_xp>=480},
+  {id:'chama7', label:'Guardião da Chama', icon:'🕯️', hint:'7 dias de Chama Sagrada', test:s=>s.streak_days>=7},
+  {id:'chama30', label:'Chama Eterna', icon:'🌟', hint:'30 dias de Chama Sagrada', test:s=>s.streak_days>=30},
+  {id:'fundador', label:'Fundador de Coven', icon:'🏛️', hint:'Funde um Coven', test:s=>s.covensFounded>=1},
+  {id:'lunar', label:'Andarilho Lunar', icon:'🌙', hint:'Complete as 4 missões do Passe Lunar', test:s=>s.lunarCompletions>=4},
+  {id:'gratidao', label:'Voz de Gratidão', icon:'🙏', hint:'Registre uma Graça Alcançada', test:s=>s.gratitudeCount>=1},
+  {id:'chamas5', label:'Chama Compartilhada', icon:'💫', hint:'Acenda 5 velas no Mural de Firmezas', test:s=>s.candleLights>=5}
+];
+function computeBadges(stats){ return BADGE_DEFS.map(b=>({...b, achieved: b.test(stats)})); }
+function renderBadgesGrid(stats){
+  const badges = computeBadges(stats);
+  return `<div class="badges-grid">${badges.map(b=>`
+    <div class="badge-item ${b.achieved?'achieved':'locked'}" title="${b.achieved?b.label:b.hint}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-label">${b.label}</div>
+    </div>
+  `).join('')}</div>`;
+}
+
+/* ---------------- PERFIL PÚBLICO ---------------- */
+async function openProfileModal(userId){
+  if(userId === state.profile.id){ closeModal(); setNav('perfil'); renderAll(); return; }
+  openModal(`<div class="modal-title">Carregando perfil…</div>`);
+  try{
+    const [profile, posts, covensFounded, gratitudeCount, lunarCompletions, candleLights] = await Promise.all([
+      api.fetchPublicProfile(userId),
+      api.fetchUserPosts(userId),
+      api.fetchUserCovenFoundedCount(userId),
+      api.fetchUserGratitudeCount(userId),
+      api.fetchUserLunarCompletionCount(userId),
+      api.fetchUserCandleLightsCount(userId)
+    ]);
+    const c = tradColor(profile.religion_path);
+    const grade = gradeOf(profile.mana_xp);
+    const isFollowing = state.followingIds.has(userId);
+    const isBlocked = state.blockedIds.has(userId);
+    const stats = {mana_xp: profile.mana_xp, streak_days: profile.streak_days, covensFounded, gratitudeCount, lunarCompletions, candleLights};
+    const postsHtml = posts.length ? posts.map(p=>`
+      <div class="public-post-item">
+        <div class="public-post-time">${relativeTime(p.created_at)}</div>
+        <div class="public-post-text">${escapeHtml(p.content)}</div>
+        ${p.media_urls && p.media_urls.length ? `<img class="post-photo" src="${escapeHtml(p.media_urls[0])}" alt="" loading="lazy">` : ''}
+      </div>
+    `).join('') : '<div class="empty-hint">Nenhuma publicação pública ainda.</div>';
+    openModal(`
+      <div class="profile-modal-top">
+        <div class="avatar-sm" style="width:56px; height:56px; font-size:18px; background:linear-gradient(145deg, ${c}, ${c}cc)">${initials(profile.display_name)}</div>
+        <div class="profile-modal-name">${escapeHtml(profile.display_name)}${profile.is_verified?verifiedBadgeSVG():''}</div>
+        <div class="node-sub">Grau ${grade} · ${GRADES[grade]} · ${tradLabel(profile.religion_path)}</div>
+      </div>
+      <div style="display:flex; gap:8px; margin:14px 0">
+        <button class="btn-primary ${isBlocked?'':''}" style="flex:1; margin-top:0" data-action="follow-user" data-target="${userId}" data-rerender="profile-modal" ${isBlocked?'disabled':''}>${isFollowing?'Deixar de seguir':'Seguir'}</button>
+        <button class="btn-ghost" id="btnProfileMenu">⋯</button>
+      </div>
+      <div class="section-sub" style="margin-bottom:8px">Conquistas</div>
+      ${renderBadgesGrid(stats)}
+      <div class="section-sub" style="margin:18px 0 8px">Publicações públicas</div>
+      ${postsHtml}
+    `);
+    document.getElementById('btnProfileMenu').addEventListener('click', ()=>{
+      openPostMenu(null, userId, profile.display_name, isBlocked);
+    });
+  }catch(err){
+    console.error(err);
+    openModal(`<div class="modal-title">Não encontrado</div><div class="node-sub">Não foi possível carregar esse perfil agora.</div>`);
+  }
+}
+
+/* ---------------- DENUNCIAR / BLOQUEAR ---------------- */
+function openPostMenu(postId, targetUserId, targetName, alreadyBlocked){
+  openModal(`
+    <div class="modal-title">Mais opções</div>
+    <div style="display:flex; flex-direction:column; gap:8px">
+      ${targetUserId ? `<button class="btn-ghost" style="width:100%" data-action="view-profile" data-id="${targetUserId}">Ver perfil${targetName? ' de '+escapeHtml(targetName):''}</button>` : ''}
+      ${postId ? `<button class="btn-ghost" style="width:100%" data-action="report-content" data-type="post" data-id="${postId}">Denunciar publicação</button>` : ''}
+      ${targetUserId ? `<button class="btn-ghost" style="width:100%" data-action="report-content" data-type="profile" data-id="${targetUserId}">Denunciar perfil</button>` : ''}
+      ${targetUserId ? `<button class="btn-ghost" style="width:100%; color:var(--danger)" data-action="block-user" data-target="${targetUserId}">${alreadyBlocked?'Desbloquear':'Bloquear'} ${targetName?escapeHtml(targetName):'usuário'}</button>` : ''}
+    </div>
+  `);
+}
+function confirmBlockUser(targetId){
+  const alreadyBlocked = state.blockedIds.has(targetId);
+  openModal(`
+    <div class="modal-title">${alreadyBlocked?'Desbloquear':'Bloquear'} usuário</div>
+    <div class="node-sub" style="margin-bottom:16px">${alreadyBlocked ? 'Vocês voltarão a ver publicações um do outro.' : 'Você não verá mais publicações dessa pessoa, e a conexão de seguir entre vocês será desfeita.'}</div>
+    <button class="btn-primary" style="width:100%" id="btnConfirmBlock">${alreadyBlocked?'Desbloquear':'Bloquear'}</button>
+  `);
+  document.getElementById('btnConfirmBlock').addEventListener('click', async ()=>{
+    try{
+      if(alreadyBlocked){
+        await api.unblockUser(state.profile.id, targetId);
+        state.blockedIds.delete(targetId);
+        toast('Usuário desbloqueado.');
+      }else{
+        await api.blockUser(state.profile.id, targetId);
+        state.blockedIds.add(targetId);
+        state.followingIds.delete(targetId);
+        state.posts = state.posts.filter(p=>p.userId !== targetId);
+        toast('Usuário bloqueado. Você não verá mais o conteúdo dele(a).');
+      }
+      closeModal();
+      renderAll();
+    }catch(err){
+      console.error(err);
+      toast('Não foi possível concluir agora.');
+    }
+  });
+}
+function openReportModal(targetType, targetId){
+  openModal(`
+    <div class="modal-title">Denunciar ${targetType==='profile'?'perfil':'publicação'}</div>
+    <div class="node-sub" style="margin-bottom:12px">Conte o que está errado. Nossa equipe vai analisar.</div>
+    <div class="form-field"><textarea id="reportReason" placeholder="Descreva o motivo da denúncia…" maxlength="500"></textarea></div>
+    <button class="btn-primary" style="width:100%" id="btnSubmitReport">Enviar denúncia</button>
+  `);
+  document.getElementById('btnSubmitReport').addEventListener('click', async (ev)=>{
+    const reason = document.getElementById('reportReason').value.trim();
+    if(!reason){ toast('Descreva o motivo da denúncia.'); return; }
+    const btn = ev.currentTarget;
+    btn.disabled = true; btn.textContent = 'Enviando…';
+    try{
+      await api.reportContent({reporterId: state.profile.id, targetType, targetId, reason});
+      closeModal();
+      toast('Denúncia enviada. Obrigado por ajudar a manter o Arcanum seguro ✦');
+    }catch(err){
+      btn.disabled = false; btn.textContent = 'Enviar denúncia';
+      toast('Não foi possível enviar agora.');
+      console.error(err);
+    }
+  });
+}
+
 async function openDmThread(conversationId, otherId, otherName){
   stopDmThreadSub();
   state.openDmConversationId = conversationId;
@@ -3197,6 +3505,83 @@ function openNewPostModal(){
 }
 
 /* ---------- New Grimoire Entry ---------- */
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight){
+  const words = text.split(' ');
+  let line = '';
+  for(let n=0; n<words.length; n++){
+    const testLine = line + words[n] + ' ';
+    if(ctx.measureText(testLine).width > maxWidth && n > 0){
+      ctx.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, x, y);
+  return y + lineHeight;
+}
+function downloadCardImage(title, lines, filename){
+  const canvas = document.createElement('canvas');
+  canvas.width = 800; canvas.height = 1000;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 1000);
+  grad.addColorStop(0, '#171A2A'); grad.addColorStop(1, '#07080C');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, 800, 1000);
+  ctx.strokeStyle = 'rgba(212,168,83,0.4)'; ctx.lineWidth = 2;
+  ctx.strokeRect(20, 20, 760, 960);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#E8C989';
+  ctx.font = '600 28px Georgia, serif';
+  ctx.fillText('✦ ARCANUM ✦', 400, 90);
+  ctx.font = '600 24px Georgia, serif';
+  ctx.fillStyle = '#D4A853';
+  let y = wrapCanvasText(ctx, title, 400, 160, 680, 32) + 20;
+  ctx.font = '16px Georgia, serif';
+  ctx.fillStyle = '#EDEAE3';
+  lines.forEach(line=>{
+    y = wrapCanvasText(ctx, line, 400, y, 680, 24) + 26;
+  });
+  ctx.font = 'italic 13px Georgia, serif';
+  ctx.fillStyle = '#8B87A0';
+  ctx.fillText('arcanum-mu.vercel.app', 400, 955);
+  canvas.toBlob(blob=>{
+    if(!blob){ toast('Não foi possível gerar a imagem.'); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  }, 'image/png');
+}
+function exportGrimoirePDF(){
+  if(!state.grimoire.length){ toast('Seu Grimório ainda está vazio.'); return; }
+  const typeLabels = {dream:'Sonho', ritual:'Ritual', meditation:'Meditação', tarot:'Tarot'};
+  const entriesHtml = state.grimoire.map(g=>`
+    <div style="margin-bottom:22px; padding-bottom:16px; border-bottom:1px solid #ddd;">
+      <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">${typeLabels[g.type]||g.type} · ${escapeHtml(g.date)}</div>
+      <div style="font-size:16px; font-weight:600; margin:4px 0 8px; color:#1a1420;">${escapeHtml(g.title)}</div>
+      <div style="font-size:13px; line-height:1.6; color:#333; white-space:pre-wrap;">${escapeHtml(g.content)}</div>
+    </div>
+  `).join('');
+  const win = window.open('', '_blank');
+  if(!win){ toast('Permita pop-ups para exportar o PDF.'); return; }
+  win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Grimório de ${escapeHtml(state.profile.display_name)}</title>
+    <style>
+      body{font-family:Georgia, serif; max-width:680px; margin:40px auto; padding:0 20px; color:#1a1420;}
+      h1{font-size:26px; border-bottom:2px solid #D4A853; padding-bottom:10px;}
+      @media print{ body{margin:0; padding:20px;} }
+    </style></head>
+    <body>
+      <h1>📖 Grimório de ${escapeHtml(state.profile.display_name)}</h1>
+      <p style="color:#888; font-size:12px; margin-bottom:30px;">Exportado do Arcanum em ${new Date().toLocaleDateString('pt-BR')}</p>
+      ${entriesHtml}
+    </body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(()=> win.print(), 300);
+}
 function openNewGrimoireModal(){
   openModal(`
     <div class="modal-title">Novo Registro</div>
@@ -3397,7 +3782,7 @@ function shortDate(iso){
 
 async function loadAppData(userId){
   await ensureProfileLoaded(userId);
-  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers, lunarQuests, myQuestCompletionIds, sacredPlaces] = await Promise.all([
+  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers, lunarQuests, myQuestCompletionIds, sacredPlaces, followingIds, blockedIds, followCounts] = await Promise.all([
     api.fetchPosts(),
     api.fetchMyLikedPostIds(userId),
     api.fetchGrimoire(userId),
@@ -3409,7 +3794,10 @@ async function loadAppData(userId){
     api.fetchMyFlowerIds(userId),
     api.fetchLunarQuests(),
     api.fetchMyQuestCompletions(userId),
-    api.fetchSacredPlaces()
+    api.fetchSacredPlaces(),
+    api.fetchFollowingIds(userId),
+    api.fetchBlockedIds(userId),
+    api.fetchFollowCounts(userId)
   ]);
   state.sacredPlaces = sacredPlaces;
   state.myLikedPostIds = myLikes;
@@ -3417,6 +3805,9 @@ async function loadAppData(userId){
   state.myCovenIds = myCovenIds;
   state.myFlowerIds = myFlowers;
   state.myQuestCompletionIds = myQuestCompletionIds;
+  state.followingIds = followingIds;
+  state.blockedIds = blockedIds;
+  state.followCounts = followCounts;
   state.lunarQuests = lunarQuests.map(row => ({
     id: row.id, title: row.title, description: row.description,
     phase: row.required_moon_phase, mana: row.mana_reward,
@@ -3432,10 +3823,11 @@ async function loadAppData(userId){
     testimony: row.testimony, flowers: row.flowers_count, sent: myFlowers.has(row.id),
     date: shortDate(row.created_at)
   }));
-  state.posts = posts.map(row => ({
+  state.posts = posts.filter(row => !blockedIds.has(row.user_id)).map(row => ({
     id: row.id,
     userId: row.user_id,
     user: row.profiles?.display_name || 'Alguém',
+    verified: !!row.profiles?.is_verified,
     trad: row.religion_path,
     type: row.type,
     time: relativeTime(row.created_at),
@@ -3471,6 +3863,7 @@ async function ensureProfileLoaded(userId){
     moon: profile.moon_sign || '—',
     asc: profile.ascendant_sign || '—',
     stealthPin: profile.stealth_pin || '7777',
+    isVerified: !!profile.is_verified,
     avatarLayers: profile.avatar_layers || {aura:'default', robe:'default', item:'default', familiar:'egg'},
     unlockedItems: new Set(profile.unlocked_items || ['aura:default','robe:default','item:default']),
     // "Já registrou hoje" is derived from the DB date, so refreshing the
@@ -3644,7 +4037,8 @@ document.getElementById('authSubmit').addEventListener('click', async ()=>{
   try{
     if(authMode==='signup'){
       const username = email.split('@')[0] + '.' + Math.random().toString(36).slice(2,6);
-      const result = await signUp({email, password, username, display_name: displayName});
+      const referredBy = new URLSearchParams(window.location.search).get('ref') || null;
+      const result = await signUp({email, password, username, display_name: displayName, referredBy});
       if(!result.session){
         errorEl.textContent = '';
         loadingEl.style.display = 'none';
