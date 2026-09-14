@@ -375,6 +375,23 @@ export async function completeLunarQuest(questId, userId, proofPhotoUrl, sharedT
   return data;
 }
 
+/* ---------------- RADAR SAGRADO (mapa de locais) ---------------- */
+export async function fetchSacredPlaces() {
+  const { data, error } = await supabase.from('sacred_places').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createSacredPlace({ name, category, address, city, latitude, longitude, phone, createdBy }) {
+  const { data, error } = await supabase
+    .from('sacred_places')
+    .insert({ name, category, address, city, latitude, longitude, phone: phone || null, created_by: createdBy })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function searchProfiles(query, excludeId, limit = 8) {
   const { data, error } = await supabase
     .from('profiles')

@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Arcanum</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -687,6 +689,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .shop-swatch-glyph{display:flex; align-items:center; justify-content:center; font-size:18px; background:var(--panel-3);}
 .shop-item-label{font-size:11.5px; color:var(--text-mid); line-height:1.3;}
 .shop-btn{width:100%; font-size:11.5px; padding:7px 10px;}
+.sacred-map-container{height:260px; border-radius:14px; overflow:hidden; margin-bottom:12px; border:1px solid var(--line); background:var(--panel-2);}
+.leaflet-popup-content-wrapper{background:var(--panel-2); color:var(--text-hi); border-radius:10px;}
+.leaflet-popup-tip{background:var(--panel-2);}
 .mana-bar-wrap{width:100%; margin-top:14px;}
 .mana-bar-track{height:6px; border-radius:3px; background:var(--panel-3); overflow:hidden;}
 .mana-bar-fill{
@@ -797,7 +802,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 /* ---------- MODALS ---------- */
 .modal-overlay{
   position:absolute; inset:0; background:rgba(3,4,8,0.72); backdrop-filter:blur(2px);
-  display:none; align-items:flex-end; z-index:50;
+  display:none; align-items:flex-end; z-index:2000;
 }
 .modal-overlay.show{display:flex;}
 .modal-sheet{
@@ -1313,6 +1318,7 @@ const state = {
   myQuestCompletionIds: new Set(),
   veilHistory: [],
   tarotSpread: null,
+  sacredPlaces: [],
   trilhas:[
     {id:'m1', title:'História & Fundamentos', sub:'Origens das tradições místicas', xp:15, done:true},
     {id:'m2', title:'Ervas & Banhos', sub:'Simbolismo das plantas sagradas', xp:15, done:true},
@@ -1435,6 +1441,7 @@ function closeModal(){
   document.getElementById('modalOverlay').classList.remove('show');
   if(modalLastFocused && typeof modalLastFocused.focus === 'function') modalLastFocused.focus();
   stopDmThreadSub();
+  if(pickerMapInstance){ pickerMapInstance.remove(); pickerMapInstance = null; pickerMarker = null; }
 }
 document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape' && document.getElementById('modalOverlay').classList.contains('show')){
@@ -1448,6 +1455,10 @@ function setNav(name){
   document.querySelectorAll('.nav-btn, .side-nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.nav===name));
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id==='screen-'+name));
   document.getElementById('fabNewPost').style.display = name==='agora' ? 'flex' : 'none';
+  // O mapa do Radar Sagrado é criado enquanto a tela pode estar oculta
+  // (display:none), então Leaflet mede tamanho 0 nesse momento — refazer
+  // a medição só funciona depois que a tela realmente fica visível.
+  if(name==='egregora' && sacredMapInstance) setTimeout(()=> sacredMapInstance.invalidateSize(), 0);
 }
 
 /* =========================================================
@@ -2177,6 +2188,83 @@ function renderVeilOracleCard(){
   `;
 }
 
+/* ---------------- RADAR SAGRADO (mapa com Leaflet) ---------------- */
+const SACRED_CATEGORIES = {
+  loja: {glyph:'🏪', label:'Loja Esotérica'},
+  ervanaria: {glyph:'🌿', label:'Ervanária'},
+  terreiro: {glyph:'🥁', label:'Terreiro'},
+  templo: {glyph:'⛩️', label:'Templo'},
+  livraria: {glyph:'📚', label:'Livraria'}
+};
+const SACRED_MAP_DEFAULT_CENTER = [-23.5505, -46.6333];
+let sacredMapInstance = null;
+let pickerMapInstance = null, pickerMarker = null;
+function initSacredMap(){
+  const container = document.getElementById('sacredMapContainer');
+  if(!container || typeof L === 'undefined') return;
+  if(sacredMapInstance){ sacredMapInstance.remove(); sacredMapInstance = null; }
+  const center = state.sacredPlaces.length ? [state.sacredPlaces[0].latitude, state.sacredPlaces[0].longitude] : SACRED_MAP_DEFAULT_CENTER;
+  sacredMapInstance = L.map(container, {zoomControl:true}).setView(center, 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 19
+  }).addTo(sacredMapInstance);
+  state.sacredPlaces.forEach(place=>{
+    const info = SACRED_CATEGORIES[place.category] || {glyph:'✦', label:place.category};
+    L.marker([place.latitude, place.longitude]).addTo(sacredMapInstance)
+      .bindPopup(`<b>${info.glyph} ${escapeHtml(place.name)}</b><br>${escapeHtml(place.address)}, ${escapeHtml(place.city)}${place.phone?'<br>'+escapeHtml(place.phone):''}`);
+  });
+}
+function openNewSacredPlaceModal(){
+  if(sacredMapInstance) sacredMapInstance.closePopup();
+  openModal(`
+    <div class="modal-title">Adicionar ao Radar Sagrado</div>
+    <div class="form-field"><label for="spName">Nome do local</label><input type="text" id="spName" placeholder="Ex: Ervanária Caminhos da Terra"></div>
+    <div class="form-field"><label for="spCategory">Categoria</label>
+      <select id="spCategory">${Object.entries(SACRED_CATEGORIES).map(([k,v])=>`<option value="${k}">${v.glyph} ${v.label}</option>`).join('')}</select>
+    </div>
+    <div class="form-field"><label for="spAddress">Endereço</label><input type="text" id="spAddress" placeholder="Rua, número"></div>
+    <div class="form-field"><label for="spCity">Cidade</label><input type="text" id="spCity" placeholder="Sua cidade"></div>
+    <div class="form-field"><label for="spPhone">Telefone (opcional)</label><input type="text" id="spPhone" placeholder="(11) 90000-0000"></div>
+    <div class="node-sub" style="margin-bottom:8px">Toque no mapa para marcar a localização exata</div>
+    <div id="spPickerMap" style="height:200px; border-radius:12px; overflow:hidden; margin-bottom:14px"></div>
+    <button class="btn-primary" style="width:100%" id="btnSubmitSacredPlace">Adicionar</button>
+  `);
+  setTimeout(()=>{
+    const container = document.getElementById('spPickerMap');
+    if(!container || typeof L === 'undefined') return;
+    const center = state.sacredPlaces.length ? [state.sacredPlaces[0].latitude, state.sacredPlaces[0].longitude] : SACRED_MAP_DEFAULT_CENTER;
+    pickerMapInstance = L.map(container).setView(center, 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 19
+    }).addTo(pickerMapInstance);
+    pickerMarker = L.marker(center, {draggable:true}).addTo(pickerMapInstance);
+    pickerMapInstance.on('click', e=>{ pickerMarker.setLatLng(e.latlng); });
+    setTimeout(()=>{ if(pickerMapInstance) pickerMapInstance.invalidateSize(); }, 150);
+  }, 60);
+  document.getElementById('btnSubmitSacredPlace').addEventListener('click', (ev)=>{
+    const name = document.getElementById('spName').value.trim();
+    const category = document.getElementById('spCategory').value;
+    const address = document.getElementById('spAddress').value.trim();
+    const city = document.getElementById('spCity').value.trim();
+    const phone = document.getElementById('spPhone').value.trim();
+    if(!name || !address || !city){ toast('Preencha nome, endereço e cidade.'); return; }
+    if(!pickerMarker){ toast('Marque a localização no mapa.'); return; }
+    const {lat, lng} = pickerMarker.getLatLng();
+    const btn = ev.currentTarget;
+    btn.disabled = true; btn.textContent = 'Adicionando…';
+    api.createSacredPlace({name, category, address, city, latitude:lat, longitude:lng, phone, createdBy: state.profile.id}).then(row=>{
+      state.sacredPlaces.unshift(row);
+      closeModal();
+      renderEgregora();
+      toast('Local adicionado ao Radar Sagrado ✦');
+    }).catch(err=>{
+      btn.disabled = false; btn.textContent = 'Adicionar';
+      toast('Não foi possível adicionar agora.');
+      console.error(err);
+    });
+  });
+}
+
 /* =========================================================
    RENDER: EGRÉGORA
    ========================================================= */
@@ -2273,6 +2361,11 @@ function renderEgregora(){
       <div class="section-sub">Seu Sol em ${state.profile.sun} · Lua em ${state.profile.moon} · Ascendente em ${state.profile.asc}</div></div>
     <div style="margin-bottom:18px">${affinityHtml}</div>
 
+    <div class="section-head"><div class="section-title" style="font-size:19px">🗺️ Radar Sagrado</div>
+      <div class="section-sub">Ervanárias, terreiros, templos e lojas perto de você</div></div>
+    <div id="sacredMapContainer" class="sacred-map-container"></div>
+    <button class="btn-ghost" style="width:100%; margin-bottom:18px" id="btnAddSacredPlace">+ Adicionar local</button>
+
     <div class="section-head"><div class="section-title" style="font-size:19px">Mural de Firmezas</div>
       <div class="section-sub">Corrente de Luz — acenda uma vela por quem precisa</div></div>
     <div class="form-field" style="display:flex; gap:8px; align-items:flex-start; margin-bottom:12px">
@@ -2291,6 +2384,7 @@ function renderEgregora(){
       ${market.map(m=>`<div class="market-item"><div class="market-thumb" style="background:linear-gradient(160deg, ${m.c}44, ${m.c}11)"></div><div class="market-name">${m.n}</div><div class="market-price">${m.p}</div></div>`).join('')}
     </div>
   `;
+  setTimeout(initSacredMap, 0);
 }
 setInterval(()=>{
   const el = document.getElementById('moonCountdown');
@@ -2777,6 +2871,7 @@ document.addEventListener('click', (e)=>{
   }
   if(e.target.id==='btnNewCandle') addNewCandle();
   if(e.target.id==='btnNewCoven') openNewCovenModal();
+  if(e.target.id==='btnAddSacredPlace') openNewSacredPlaceModal();
   if(e.target.id==='btnNewGratitude') openNewGratitudeModal();
   if(e.target.id==='btnMoonNotify'){
     state.moonNotify = !state.moonNotify;
@@ -3300,7 +3395,7 @@ function shortDate(iso){
 
 async function loadAppData(userId){
   await ensureProfileLoaded(userId);
-  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers, lunarQuests, myQuestCompletionIds] = await Promise.all([
+  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers, lunarQuests, myQuestCompletionIds, sacredPlaces] = await Promise.all([
     api.fetchPosts(),
     api.fetchMyLikedPostIds(userId),
     api.fetchGrimoire(userId),
@@ -3311,8 +3406,10 @@ async function loadAppData(userId){
     api.fetchGratitude(),
     api.fetchMyFlowerIds(userId),
     api.fetchLunarQuests(),
-    api.fetchMyQuestCompletions(userId)
+    api.fetchMyQuestCompletions(userId),
+    api.fetchSacredPlaces()
   ]);
+  state.sacredPlaces = sacredPlaces;
   state.myLikedPostIds = myLikes;
   state.myLitCandleIds = myLights;
   state.myCovenIds = myCovenIds;
