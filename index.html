@@ -1317,6 +1317,7 @@ const state = {
   lunarQuests: [],
   myQuestCompletionIds: new Set(),
   veilHistory: [],
+  veilCategory: 'ervas',
   tarotSpread: null,
   sacredPlaces: [],
   trilhas:[
@@ -2174,7 +2175,7 @@ function renderVeilOracleCard(){
       <div class="node-sub" style="margin-bottom:12px">Traga sua dúvida sobre ervas, guias, astrologia ou correspondências — o Véu responde com o que a tradição ensina.</div>
       ${history ? `<div class="veil-history">${history}</div>` : ''}
       <div class="form-field">
-        <select id="veilCategory">${Object.entries(VEIL_CATEGORIES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+        <select id="veilCategory">${Object.entries(VEIL_CATEGORIES).map(([k,v])=>`<option value="${k}" ${state.veilCategory===k?'selected':''}>${v}</option>`).join('')}</select>
       </div>
       <div class="form-field" style="display:flex; gap:8px; align-items:flex-start">
         <input type="text" id="veilQuestionInput" aria-label="Sua pergunta ao Guardião" placeholder="Escreva sua pergunta…" style="flex:1">
@@ -2865,6 +2866,7 @@ document.addEventListener('click', (e)=>{
     const category = document.getElementById('veilCategory').value;
     const q = input.value.trim();
     if(!q){ toast('Escreva sua pergunta ao Guardião.'); return; }
+    state.veilCategory = category;
     state.veilHistory.push({q, a: drawVeilResponse(category)});
     if(state.veilHistory.length > 5) state.veilHistory.shift();
     renderEgregora();
