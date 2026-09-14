@@ -721,6 +721,15 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .coven-card-body{padding:26px 14px 10px; text-align:left; display:block;}
 .coven-desc{font-size:11.5px; color:var(--text-mid); margin-top:6px; line-height:1.4;}
 .coven-card-btn{width:calc(100% - 28px); margin:0 14px 14px;}
+.coven-pinned{
+  background:rgba(212,168,83,0.1); border:1px solid rgba(212,168,83,0.3); border-radius:12px;
+  padding:10px 12px; font-size:12.5px; color:var(--text-hi); margin-bottom:14px; line-height:1.4;
+}
+.coven-member-row{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+.coven-member-row:last-child{border-bottom:none;}
+.coven-member-name{font-size:13px; font-weight:600; color:var(--text-hi);}
+.coven-member-role{font-size:11px; color:var(--text-low); margin-top:1px;}
+.coven-member-btn{padding:6px 10px; font-size:11px; flex-shrink:0;}
 
 /* ---------- GRATITUDE WALL ---------- */
 .gratitude-card{
@@ -1507,6 +1516,7 @@ const state = {
   covenFilter: 'all',
   storiesByUser: [],
   storyViewIds: new Set(),
+  myCovenPostLikeIds: new Set(),
   tarotSpread: null,
   sacredPlaces: [],
   trilhas:[
@@ -3499,6 +3509,11 @@ document.addEventListener('click', (e)=>{
       });
     }
     else if(action==='open-coven'){ openCovenWall(id); }
+    else if(action==='coven-like'){ toggleCovenLike(id); }
+    else if(action==='coven-toggle-comments'){ toggleCovenComments(id); }
+    else if(action==='coven-send-comment'){ sendCovenComment(id); }
+    else if(action==='coven-toggle-mod'){ handleCovenToggleMod(document.getElementById('covenMembersList')?.dataset.covenId, act.dataset.uid, act.dataset.role); }
+    else if(action==='coven-remove-member'){ handleCovenRemoveMember(document.getElementById('covenMembersList')?.dataset.covenId, act.dataset.uid); }
     else if(action==='filter-covens'){ state.covenFilter = act.dataset.trad; renderCovens(); }
     else if(action==='go-covens'){ setNav('covens'); }
     else if(action==='add-story'){ openNewStoryModal(); }
@@ -4237,42 +4252,266 @@ function openNewCovenModal(){
   });
 }
 
+/* ---------------- MURAL DO COVEN (rico: foto, curtida, comentário) ---------------- */
+let covenWallState = null; // {covenId, posts, photoBlob, expanded:Set}
+function covenPostCardHtml(p){
+  const c = tradColor(state.covens.find(cv=>cv.id===covenWallState.covenId)?.tradition);
+  const liked = state.myCovenPostLikeIds.has(p.id);
+  const expanded = covenWallState.expanded.has(p.id);
+  const commentsHtml = (p._comments||[]).map(cm=>`<div class="comment-line"><b>${escapeHtml(cm.author_name||'Alguém')}:</b> ${escapeHtml(cm.content)}</div>`).join('');
+  return `
+  <div class="card" style="margin-bottom:10px">
+    <div class="post-head">
+      <div class="post-head-link" style="cursor:default">
+        <div class="avatar-sm" style="background:linear-gradient(145deg, ${c}, ${c}cc)">${initials(p.author_name)}</div>
+        <div class="post-meta">
+          <div class="post-name">${escapeHtml(p.author_name||'Alguém')}</div>
+          <div class="post-sub"><span class="post-time">${relativeTime(p.created_at)}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="post-text">${escapeHtml(p.content)}</div>
+    ${p.media_url ? `<img class="post-photo" src="${escapeHtml(p.media_url)}" alt="" loading="lazy">` : ''}
+    <div class="reaction-bar">
+      <button class="reaction-btn ${liked?'active':''}" data-action="coven-like" data-id="${p.id}">
+        <svg viewBox="0 0 24 24" fill="${liked?'currentColor':'none'}" stroke="currentColor" stroke-width="1.6"><path d="M12 3l2.2 4.8 5.3.6-4 3.6 1.1 5.2L12 14.8 7.4 17.2l1.1-5.2-4-3.6 5.3-.6z"/></svg>
+        <span>${p.likes_count||0} Axé</span>
+      </button>
+      <button class="reaction-btn grow" data-action="coven-toggle-comments" data-id="${p.id}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span>${p.comments_count||0}</span>
+      </button>
+    </div>
+    <div class="comments-box" style="display:${expanded?'block':'none'}">
+      ${expanded ? (commentsHtml || (p._commentsLoaded ? '<div class="empty-hint" style="padding:4px 0">Nenhum comentário ainda.</div>' : 'Carregando…')) : ''}
+      ${expanded ? `<div class="comment-input-row">
+        <input type="text" placeholder="Escreva com respeito…" aria-label="Escrever comentário" data-coven-comment-input="${p.id}">
+        <button data-action="coven-send-comment" data-id="${p.id}">Enviar</button>
+      </div>` : ''}
+    </div>
+  </div>`;
+}
+function renderCovenWallList(){
+  const list = document.getElementById('covenWallList');
+  if(!list || !covenWallState) return;
+  const posts = covenWallState.posts;
+  if(!posts.length){ list.className='empty-hint'; list.innerHTML='Nenhuma publicação ainda. Seja a primeira voz.'; return; }
+  list.className = '';
+  list.innerHTML = posts.map(covenPostCardHtml).join('');
+}
 async function openCovenWall(covenId){
   const coven = state.covens.find(c=>c.id===covenId);
   if(!coven) return;
   if(!coven.joined){ toast('Entre no coven para ver o mural.'); return; }
+  const isFounder = coven.createdBy === state.profile.id;
+  covenWallState = { covenId, posts: [], photoBlob: null, expanded: new Set() };
   openModal(`<div class="modal-title">${escapeHtml(coven.name)}</div>
     <div class="node-sub" style="margin-bottom:12px">${tradLabel(coven.tradition)} · ${coven.memberCount} membro${coven.memberCount===1?'':'s'}</div>
-    <div class="form-field" style="display:flex; gap:8px; align-items:flex-start; margin-bottom:12px">
-      <input type="text" id="covenPostInput" placeholder="Compartilhe algo com o coven…" style="flex:1">
-      <button class="btn-ghost" id="btnCovenPost">Postar</button>
+    <div style="display:flex; gap:8px; margin-bottom:14px">
+      <button class="btn-ghost" style="flex:1" id="btnCovenMembers">👥 Membros</button>
+      ${isFounder ? `<button class="btn-ghost" style="flex:1" id="btnEditCoven">⚙ Editar</button>` : ''}
     </div>
+    ${coven.pinnedAnnouncement ? `<div class="coven-pinned">📌 ${escapeHtml(coven.pinnedAnnouncement)}</div>` : ''}
+    <div class="form-field" style="margin-bottom:8px">
+      <textarea id="covenPostInput" placeholder="Compartilhe algo com o coven…" maxlength="1000"></textarea>
+    </div>
+    <div id="covenPhotoPreview"></div>
+    <div style="display:flex; gap:8px; margin-bottom:16px">
+      <button class="btn-ghost" id="btnAddCovenPhoto" style="flex:1">📷 Foto</button>
+      <button class="btn-primary" id="btnCovenPost" style="flex:1; margin-top:0">Publicar</button>
+    </div>
+    <input type="file" id="covenPhotoInput" accept="image/*" style="display:none">
     <div id="covenWallList" class="empty-hint">Carregando…</div>`);
-  document.getElementById('btnCovenPost').addEventListener('click', async ()=>{
+
+  document.getElementById('btnCovenMembers').addEventListener('click', ()=> openCovenMembersModal(covenId));
+  const editBtn = document.getElementById('btnEditCoven');
+  if(editBtn) editBtn.addEventListener('click', ()=> openEditCovenModal(covenId));
+
+  const photoInput = document.getElementById('covenPhotoInput');
+  document.getElementById('btnAddCovenPhoto').addEventListener('click', ()=> photoInput.click());
+  photoInput.addEventListener('change', async ()=>{
+    const file = photoInput.files[0];
+    if(!file) return;
+    try{
+      covenWallState.photoBlob = await compressImageToWebP(file);
+      document.getElementById('covenPhotoPreview').innerHTML =
+        `<img src="${URL.createObjectURL(covenWallState.photoBlob)}" alt="" style="width:100%; max-height:180px; object-fit:cover; border-radius:12px; margin-bottom:8px">`;
+    }catch(err){ console.error(err); toast('Não foi possível processar essa imagem.'); }
+  });
+
+  document.getElementById('btnCovenPost').addEventListener('click', async (ev)=>{
     const input = document.getElementById('covenPostInput');
     const val = input.value.trim();
-    if(!val) return;
-    input.value = '';
+    if(!val){ toast('Escreva algo para publicar.'); return; }
+    const btn = ev.currentTarget;
+    btn.disabled = true; btn.textContent = 'Publicando…';
     try{
-      await api.postToCoven(covenId, state.profile.id, val);
-      await loadCovenWall();
+      let mediaUrl = null;
+      if(covenWallState.photoBlob) mediaUrl = await api.uploadCovenPostMedia(state.profile.id, covenWallState.photoBlob);
+      const row = await api.postToCoven(covenId, state.profile.id, val, mediaUrl);
+      input.value = '';
+      covenWallState.photoBlob = null;
+      document.getElementById('covenPhotoPreview').innerHTML = '';
+      covenWallState.posts.unshift({
+        id: row.id, content: row.content, media_url: row.media_url, created_at: row.created_at,
+        author_name: state.profile.display_name, likes_count: 0, comments_count: 0
+      });
+      renderCovenWallList();
     }catch(err){ console.error(err); toast('Não foi possível publicar no coven.'); }
+    finally{ btn.disabled = false; btn.textContent = 'Publicar'; }
   });
-  async function loadCovenWall(){
-    const list = document.getElementById('covenWallList');
-    if(!list) return;
-    try{
-      const rows = await api.fetchCovenPosts(covenId);
-      if(!list.isConnected) return;
-      if(!rows.length){ list.className='empty-hint'; list.textContent='Nenhuma publicação ainda. Seja a primeira voz.'; return; }
-      list.className = '';
-      list.innerHTML = rows.map(r=>`<div class="reflection-item"><b style="color:var(--text-hi)">${escapeHtml(r.author_name||'Alguém')}</b><div class="reflection-date">${relativeTime(r.created_at)}</div>${escapeHtml(r.content)}</div>`).join('');
-    }catch(err){
-      console.error(err);
-      if(list.isConnected){ list.className='empty-hint'; list.textContent='Não foi possível carregar o mural.'; }
+
+  try{
+    const rows = await api.fetchCovenPosts(covenId);
+    if(covenWallState && covenWallState.covenId===covenId){
+      covenWallState.posts = rows;
+      renderCovenWallList();
     }
+  }catch(err){
+    console.error(err);
+    const list = document.getElementById('covenWallList');
+    if(list){ list.className='empty-hint'; list.textContent='Não foi possível carregar o mural.'; }
   }
-  loadCovenWall();
+}
+async function toggleCovenComments(postId){
+  if(!covenWallState) return;
+  const post = covenWallState.posts.find(p=>p.id===postId);
+  if(!post) return;
+  if(covenWallState.expanded.has(postId)) covenWallState.expanded.delete(postId);
+  else covenWallState.expanded.add(postId);
+  renderCovenWallList();
+  if(covenWallState.expanded.has(postId) && !post._commentsLoaded){
+    try{
+      const comments = await api.fetchCovenPostComments(postId);
+      post._comments = comments;
+      post._commentsLoaded = true;
+      renderCovenWallList();
+    }catch(err){ console.error(err); }
+  }
+}
+async function sendCovenComment(postId){
+  if(!covenWallState) return;
+  const input = document.querySelector(`[data-coven-comment-input="${postId}"]`);
+  if(!input) return;
+  const val = input.value.trim();
+  if(!val) return;
+  input.value = '';
+  try{
+    const row = await api.postCovenComment(postId, state.profile.id, val);
+    const post = covenWallState.posts.find(p=>p.id===postId);
+    if(post){
+      post._comments = [...(post._comments||[]), {...row, author_name: state.profile.display_name}];
+      post.comments_count = (post.comments_count||0) + 1;
+      renderCovenWallList();
+    }
+  }catch(err){ console.error(err); toast('Não foi possível comentar agora.'); }
+}
+async function toggleCovenLike(postId){
+  if(!covenWallState) return;
+  const post = covenWallState.posts.find(p=>p.id===postId);
+  if(!post) return;
+  const wasLiked = state.myCovenPostLikeIds.has(postId);
+  if(wasLiked){ state.myCovenPostLikeIds.delete(postId); post.likes_count = Math.max(0, (post.likes_count||0)-1); }
+  else{ state.myCovenPostLikeIds.add(postId); post.likes_count = (post.likes_count||0)+1; }
+  renderCovenWallList();
+  const call = wasLiked ? api.unlikeCovenPost(postId, state.profile.id) : api.likeCovenPost(postId, state.profile.id);
+  call.catch(err=>{
+    if(wasLiked){ state.myCovenPostLikeIds.add(postId); post.likes_count = (post.likes_count||0)+1; }
+    else{ state.myCovenPostLikeIds.delete(postId); post.likes_count = Math.max(0, (post.likes_count||0)-1); }
+    renderCovenWallList();
+    toast('Não foi possível concluir agora.');
+    console.error(err);
+  });
+}
+
+/* ---------------- MEMBROS & MODERAÇÃO DO COVEN ---------------- */
+async function openCovenMembersModal(covenId){
+  const coven = state.covens.find(c=>c.id===covenId);
+  if(!coven) return;
+  openModal(`<div class="modal-title">Membros de ${escapeHtml(coven.name)}</div>
+    <div id="covenMembersList" class="empty-hint" data-coven-id="${covenId}">Carregando…</div>`);
+  try{
+    const members = await api.fetchCovenMembers(covenId);
+    const me = members.find(m=>m.user_id===state.profile.id);
+    const myRole = me ? me.role : 'member';
+    const list = document.getElementById('covenMembersList');
+    if(!list) return;
+    const ROLE_LABEL = {founder:'Fundador(a)', moderator:'Moderador(a)', member:'Membro'};
+    list.className = '';
+    list.innerHTML = members.map(m=>{
+      const canPromote = myRole==='founder' && m.role!=='founder';
+      const canRemove = (myRole==='founder' || myRole==='moderator') && m.role!=='founder' && m.user_id!==state.profile.id;
+      return `<div class="coven-member-row">
+        <div class="avatar-sm" style="background:var(--panel-3)">${initials(m.display_name)}</div>
+        <div style="flex:1; min-width:0">
+          <div class="coven-member-name">${escapeHtml(m.display_name)}${m.is_verified?verifiedBadgeSVG():''}</div>
+          <div class="coven-member-role">${ROLE_LABEL[m.role]}</div>
+        </div>
+        ${canPromote ? `<button class="btn-ghost coven-member-btn" data-action="coven-toggle-mod" data-uid="${m.user_id}" data-role="${m.role}">${m.role==='moderator'?'Remover mod':'Tornar mod'}</button>` : ''}
+        ${canRemove ? `<button class="btn-ghost coven-member-btn" style="color:var(--danger)" data-action="coven-remove-member" data-uid="${m.user_id}">Remover</button>` : ''}
+      </div>`;
+    }).join('');
+  }catch(err){
+    console.error(err);
+    const list = document.getElementById('covenMembersList');
+    if(list){ list.className='empty-hint'; list.textContent='Não foi possível carregar os membros.'; }
+  }
+}
+function handleCovenToggleMod(covenId, userId, currentRole){
+  const newRole = currentRole==='moderator' ? 'member' : 'moderator';
+  api.updateCovenMemberRole(covenId, userId, newRole).then(()=>{
+    toast(newRole==='moderator' ? 'Agora é moderador(a) ✦' : 'Deixou de ser moderador(a).');
+    openCovenMembersModal(covenId);
+  }).catch(err=>{ console.error(err); toast('Não foi possível atualizar o papel agora.'); });
+}
+function handleCovenRemoveMember(covenId, userId){
+  api.removeCovenMember(covenId, userId).then(()=>{
+    const coven = state.covens.find(c=>c.id===covenId);
+    if(coven) coven.memberCount = Math.max(0, coven.memberCount-1);
+    renderCovens();
+    toast('Membro removido do coven.');
+    openCovenMembersModal(covenId);
+  }).catch(err=>{ console.error(err); toast('Não foi possível remover esse membro.'); });
+}
+
+/* ---------------- EDITAR IDENTIDADE DO COVEN ---------------- */
+function openEditCovenModal(covenId){
+  const coven = state.covens.find(c=>c.id===covenId);
+  if(!coven) return;
+  openModal(`
+    <div class="modal-title">Editar Coven</div>
+    <div class="form-field"><label for="editCovenName">Nome</label><input type="text" id="editCovenName" maxlength="60" value="${escapeHtml(coven.name)}"></div>
+    <div class="form-field"><label for="editCovenDesc">Descrição</label><textarea id="editCovenDesc" maxlength="300">${escapeHtml(coven.description||'')}</textarea></div>
+    <div class="form-field">
+      <label for="editCovenPrivacy">Privacidade</label>
+      <select id="editCovenPrivacy">
+        <option value="public" ${coven.privacy==='public'?'selected':''}>Público — qualquer um pode entrar</option>
+        <option value="approval" ${coven.privacy==='approval'?'selected':''}>Sob aprovação</option>
+        <option value="secret" ${coven.privacy==='secret'?'selected':''}>Secreto</option>
+      </select>
+    </div>
+    <div class="form-field"><label for="editCovenPinned">Aviso fixado no mural (opcional)</label><textarea id="editCovenPinned" maxlength="300" placeholder="Ex: Próximo encontro sábado às 20h">${escapeHtml(coven.pinnedAnnouncement||'')}</textarea></div>
+    <button class="btn-primary" style="width:100%" id="btnSaveCovenEdit">Salvar alterações</button>
+  `);
+  document.getElementById('btnSaveCovenEdit').addEventListener('click', (ev)=>{
+    const name = document.getElementById('editCovenName').value.trim();
+    const description = document.getElementById('editCovenDesc').value.trim();
+    const privacy = document.getElementById('editCovenPrivacy').value;
+    const pinned = document.getElementById('editCovenPinned').value.trim();
+    if(!name){ toast('O coven precisa de um nome.'); return; }
+    const btn = ev.currentTarget;
+    btn.disabled = true; btn.textContent = 'Salvando…';
+    api.updateCoven(covenId, { name, description, privacy, pinned_announcement: pinned || null }).then(()=>{
+      coven.name = name; coven.description = description; coven.privacy = privacy; coven.pinnedAnnouncement = pinned || null;
+      closeModal();
+      renderCovens();
+      toast('Coven atualizado ✦');
+    }).catch(err=>{
+      btn.disabled = false; btn.textContent = 'Salvar alterações';
+      toast('Não foi possível salvar agora.');
+      console.error(err);
+    });
+  });
 }
 
 function openNewGratitudeModal(){
@@ -4331,7 +4570,7 @@ function shortDate(iso){
 
 async function loadAppData(userId){
   await ensureProfileLoaded(userId);
-  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers, lunarQuests, myQuestCompletionIds, sacredPlaces, followingIds, blockedIds, followCounts, stories, myStoryViewIds] = await Promise.all([
+  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers, lunarQuests, myQuestCompletionIds, sacredPlaces, followingIds, blockedIds, followCounts, stories, myStoryViewIds, myCovenPostLikeIds] = await Promise.all([
     api.fetchPosts(),
     api.fetchMyLikedPostIds(userId),
     api.fetchGrimoire(userId),
@@ -4348,10 +4587,12 @@ async function loadAppData(userId){
     api.fetchBlockedIds(userId),
     api.fetchFollowCounts(userId),
     api.fetchActiveStories(),
-    api.fetchMyStoryViewIds(userId)
+    api.fetchMyStoryViewIds(userId),
+    api.fetchMyCovenPostLikeIds(userId)
   ]);
   state.sacredPlaces = sacredPlaces;
   state.myLikedPostIds = myLikes;
+  state.myCovenPostLikeIds = myCovenPostLikeIds;
   state.myLitCandleIds = myLights;
   state.myCovenIds = myCovenIds;
   state.myFlowerIds = myFlowers;
@@ -4367,6 +4608,7 @@ async function loadAppData(userId){
   state.covens = covens.map(row => ({
     id: row.id, name: row.name, tradition: row.tradition, description: row.description,
     privacy: row.privacy, memberCount: row.member_count, createdBy: row.created_by,
+    pinnedAnnouncement: row.pinned_announcement,
     joined: myCovenIds.has(row.id)
   }));
   state.gratitude = gratitude.map(row => ({

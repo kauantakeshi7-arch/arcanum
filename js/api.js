@@ -316,12 +316,86 @@ export async function fetchCovenPosts(covenId) {
   return data;
 }
 
-export async function postToCoven(covenId, userId, content) {
+export async function postToCoven(covenId, userId, content, mediaUrl) {
   const { data, error } = await supabase
     .from('coven_posts')
-    .insert({ coven_id: covenId, user_id: userId, content })
+    .insert({ coven_id: covenId, user_id: userId, content, media_url: mediaUrl || null })
     .select()
     .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function uploadCovenPostMedia(userId, blob) {
+  const path = `${userId}/coven-posts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
+  const { error } = await supabase.storage
+    .from('posts-media')
+    .upload(path, blob, { contentType: 'image/webp', upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from('posts-media').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function fetchMyCovenPostLikeIds(userId) {
+  const { data, error } = await supabase.from('coven_post_likes').select('post_id').eq('user_id', userId);
+  if (error) throw error;
+  return new Set(data.map(r => r.post_id));
+}
+
+export async function likeCovenPost(postId, userId) {
+  const { error } = await supabase.from('coven_post_likes').insert({ post_id: postId, user_id: userId });
+  if (error) throw error;
+}
+
+export async function unlikeCovenPost(postId, userId) {
+  const { error } = await supabase.from('coven_post_likes').delete().eq('post_id', postId).eq('user_id', userId);
+  if (error) throw error;
+}
+
+export async function fetchCovenPostComments(postId) {
+  const { data, error } = await supabase
+    .from('coven_post_comments_with_author')
+    .select('*')
+    .eq('post_id', postId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function postCovenComment(postId, userId, content) {
+  const { data, error } = await supabase
+    .from('coven_post_comments')
+    .insert({ post_id: postId, user_id: userId, content })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/* ---------------- MEMBROS E MODERAÇÃO DO COVEN ---------------- */
+export async function fetchCovenMembers(covenId) {
+  const { data, error } = await supabase
+    .from('coven_members_with_profile')
+    .select('*')
+    .eq('coven_id', covenId)
+    .order('joined_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function updateCovenMemberRole(covenId, userId, role) {
+  const { error } = await supabase.from('coven_members').update({ role }).eq('coven_id', covenId).eq('user_id', userId);
+  if (error) throw error;
+}
+
+export async function removeCovenMember(covenId, userId) {
+  const { error } = await supabase.from('coven_members').delete().eq('coven_id', covenId).eq('user_id', userId);
+  if (error) throw error;
+}
+
+/* ---------------- IDENTIDADE DO COVEN ---------------- */
+export async function updateCoven(covenId, patch) {
+  const { data, error } = await supabase.from('covens').update(patch).eq('id', covenId).select().single();
   if (error) throw error;
   return data;
 }
