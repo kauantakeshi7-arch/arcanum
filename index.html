@@ -3567,9 +3567,11 @@ function exportGrimoirePDF(){
   const win = window.open('', '_blank');
   if(!win){ toast('Permita pop-ups para exportar o PDF.'); return; }
   win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <meta name="color-scheme" content="light only">
     <title>Grimório de ${escapeHtml(state.profile.display_name)}</title>
     <style>
-      body{font-family:Georgia, serif; max-width:680px; margin:40px auto; padding:0 20px; color:#1a1420;}
+      html{background:#fff; color-scheme:light only;}
+      body{font-family:Georgia, serif; max-width:680px; margin:40px auto; padding:0 20px; color:#1a1420; background:#fff;}
       h1{font-size:26px; border-bottom:2px solid #D4A853; padding-bottom:10px;}
       @media print{ body{margin:0; padding:20px;} }
     </style></head>
