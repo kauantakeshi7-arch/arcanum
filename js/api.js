@@ -11,14 +11,25 @@ export async function fetchPosts(limit = 50) {
   return data;
 }
 
-export async function createPost({ userId, religionPath, type, content, oracleCards }) {
+export async function createPost({ userId, religionPath, type, content, oracleCards, mediaUrls }) {
   const { data, error } = await supabase
     .from('posts')
-    .insert({ user_id: userId, religion_path: religionPath, type, content, oracle_cards: oracleCards || null })
+    .insert({ user_id: userId, religion_path: religionPath, type, content, oracle_cards: oracleCards || null, media_urls: mediaUrls || null })
     .select()
     .single();
   if (error) throw error;
   return data;
+}
+
+/* ---------------- MEDIA UPLOAD (posts-media bucket) ---------------- */
+export async function uploadPostMedia(userId, blob) {
+  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
+  const { error } = await supabase.storage
+    .from('posts-media')
+    .upload(path, blob, { contentType: 'image/webp', upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from('posts-media').getPublicUrl(path);
+  return data.publicUrl;
 }
 
 export async function hasLiked(postId, userId) {

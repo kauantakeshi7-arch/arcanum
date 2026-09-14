@@ -272,6 +272,14 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   height:150px; border-radius:12px; margin-bottom:10px; position:relative; overflow:hidden;
   display:flex; align-items:center; justify-content:center;
 }
+.post-photo{width:100%; max-height:340px; object-fit:cover; border-radius:12px; margin-bottom:10px; display:block;}
+.photo-preview-wrap{position:relative; margin-bottom:10px;}
+.photo-preview-wrap img{width:100%; max-height:240px; object-fit:cover; border-radius:12px; display:block;}
+.photo-preview-remove{
+  position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%;
+  background:rgba(0,0,0,0.55); color:#fff; border:none; font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
 .oracle-cards-row{display:flex; gap:8px; margin-bottom:10px;}
 .mini-tarot{
   flex:1; aspect-ratio:2/3; border-radius:8px; border:1px solid rgba(212,168,83,0.3);
@@ -1400,6 +1408,29 @@ function renderStories(){
 /* =========================================================
    RENDER: ÁGORA (FEED)
    ========================================================= */
+function compressImageToWebP(file, maxSize = 1080, quality = 0.8){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = ()=>{
+      img.onerror = reject;
+      img.onload = ()=>{
+        let { width, height } = img;
+        if(width > maxSize || height > maxSize){
+          if(width > height){ height = Math.round(height * (maxSize / width)); width = maxSize; }
+          else { width = Math.round(width * (maxSize / height)); height = maxSize; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Falha ao gerar imagem')), 'image/webp', quality);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 function altarPhotoSVG(seed){
   const hue = ['#D4A853','#8B6CF2','#34C79A','#C1614A'][seed % 4];
   return `<div class="altar-photo" style="background:linear-gradient(160deg, ${hue}22, #0b0c14)">
@@ -1419,7 +1450,9 @@ function feedFiltered(){
 function renderPostCard(p, idx){
   const c = tradColor(p.trad);
   let body = `<div class="post-text">${escapeHtml(p.content)}</div>`;
-  if(p.type==='altar_photo') body += altarPhotoSVG(idx);
+  if(p.type==='altar_photo'){
+    body += (p.media && p.media.length) ? `<img class="post-photo" src="${escapeHtml(p.media[0])}" alt="Foto do altar" loading="lazy">` : altarPhotoSVG(idx);
+  }
   if(p.type==='oracle_reading') body += `<div class="oracle-cards-row">${p.cards.map(cn=>`<div class="mini-tarot">${cn}</div>`).join('')}</div>`;
   const commentsHtml = p.comments.map(cm=>`<div class="comment-line"><b>${escapeHtml(cm.n)}:</b> ${escapeHtml(cm.t)}</div>`).join('');
   return `
@@ -2610,33 +2643,60 @@ function openNewPostModal(){
       <textarea id="newPostText" maxlength="600" placeholder="Compartilhe uma reflexão, dúvida ou vivência…"></textarea>
       <div class="char-count"><span id="charCount">0</span>/600</div>
     </div>
-    <button class="btn-ghost" id="btnAddPhotoMock" style="width:100%; margin-bottom:10px">📷 Adicionar foto do altar</button>
-    <div id="mockPhotoPreview"></div>
+    <button class="btn-ghost" id="btnAddPhoto" style="width:100%; margin-bottom:10px">📷 Adicionar foto do altar</button>
+    <input type="file" id="photoFileInput" accept="image/*" style="display:none">
+    <div id="photoPreviewBox"></div>
     <button class="btn-primary" style="width:100%" id="btnSubmitPost">Publicar</button>
   `);
-  let withPhoto = false;
+  let photoBlob = null;
   document.getElementById('newPostText').addEventListener('input', (e)=>{
     document.getElementById('charCount').textContent = e.target.value.length;
   });
-  document.getElementById('btnAddPhotoMock').addEventListener('click', ()=>{
-    withPhoto = !withPhoto;
-    document.getElementById('mockPhotoPreview').innerHTML = withPhoto ? altarPhotoSVG(Math.floor(Math.random()*4)) : '';
+  const fileInput = document.getElementById('photoFileInput');
+  const previewBox = document.getElementById('photoPreviewBox');
+  document.getElementById('btnAddPhoto').addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', async ()=>{
+    const file = fileInput.files[0];
+    if(!file) return;
+    if(!file.type.startsWith('image/')){ toast('Escolha um arquivo de imagem.'); return; }
+    previewBox.innerHTML = `<div class="photo-preview-wrap"><div class="altar-photo" style="height:100px"><span style="font-size:12px; color:var(--text-low)">Preparando imagem…</span></div></div>`;
+    try{
+      photoBlob = await compressImageToWebP(file);
+      const url = URL.createObjectURL(photoBlob);
+      previewBox.innerHTML = `<div class="photo-preview-wrap"><img src="${url}" alt="Pré-visualização"><button class="photo-preview-remove" id="btnRemovePhoto" type="button">✕</button></div>`;
+      document.getElementById('btnRemovePhoto').addEventListener('click', ()=>{
+        photoBlob = null; fileInput.value = ''; previewBox.innerHTML = '';
+      });
+    }catch(err){
+      console.error(err);
+      photoBlob = null;
+      previewBox.innerHTML = '';
+      toast('Não foi possível processar essa imagem.');
+    }
   });
-  document.getElementById('btnSubmitPost').addEventListener('click', (ev)=>{
+  document.getElementById('btnSubmitPost').addEventListener('click', async (ev)=>{
     const text = document.getElementById('newPostText').value.trim();
     const trad = document.getElementById('newPostTrad').value;
-    if(!text && !withPhoto){ toast('Escreva algo ou adicione uma foto.'); return; }
+    if(!text && !photoBlob){ toast('Escreva algo ou adicione uma foto.'); return; }
     const btn = ev.currentTarget;
     btn.disabled = true; btn.textContent = 'Publicando…';
-    api.createPost({
-      userId: state.profile.id,
-      religionPath: trad,
-      type: withPhoto ? 'altar_photo' : 'text',
-      content: text || 'Compartilhando meu altar hoje.'
-    }).then(row=>{
+    try{
+      let mediaUrls = null;
+      if(photoBlob){
+        btn.textContent = 'Enviando foto…';
+        const url = await api.uploadPostMedia(state.profile.id, photoBlob);
+        mediaUrls = [url];
+      }
+      const row = await api.createPost({
+        userId: state.profile.id,
+        religionPath: trad,
+        type: photoBlob ? 'altar_photo' : 'text',
+        content: text || 'Compartilhando meu altar hoje.',
+        mediaUrls
+      });
       state.posts.unshift({
         id: row.id, userId: state.profile.id, user: state.profile.display_name, trad, type: row.type,
-        time: 'agora', content: row.content, blessings:0, reposts:0,
+        time: 'agora', content: row.content, media: row.media_urls || [], blessings:0, reposts:0,
         saved:false, liked:false, comments:[], _commentsLoaded:true
       });
       closeModal();
@@ -2644,11 +2704,11 @@ function openNewPostModal(){
       renderAgora();
       renderStories();
       toast('Publicação enviada à Ágora ✦');
-    }).catch(err=>{
+    }catch(err){
       btn.disabled = false; btn.textContent = 'Publicar';
       toast('Não foi possível publicar agora. Tente de novo.');
       console.error(err);
-    });
+    }
   });
 }
 
@@ -2887,6 +2947,7 @@ async function loadAppData(userId){
     time: relativeTime(row.created_at),
     content: row.content,
     cards: row.oracle_cards || [],
+    media: row.media_urls || [],
     blessings: row.blessings_count,
     reposts: 0,
     saved: false,
