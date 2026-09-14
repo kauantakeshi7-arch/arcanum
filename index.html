@@ -553,6 +553,31 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .light-btn.active{background:rgba(212,168,83,0.14); box-shadow:0 0 10px rgba(212,168,83,0.2);}
 .light-btn:active{transform:scale(0.94);}
 
+/* ---------- COVENS ---------- */
+.coven-card{
+  display:flex; align-items:center; gap:12px; padding:11px; margin-bottom:8px;
+  background:var(--panel); border:1px solid var(--line); border-radius:14px;
+}
+.coven-glyph{
+  width:38px; height:38px; border-radius:12px; flex-shrink:0; font-size:17px;
+  display:flex; align-items:center; justify-content:center;
+}
+.coven-info{flex:1; min-width:0; text-align:left;}
+.coven-name{font-size:13.5px; font-weight:600; color:var(--text-hi);}
+.coven-meta{font-size:11px; color:var(--text-low); margin-top:1px;}
+
+/* ---------- GRATITUDE WALL ---------- */
+.gratitude-card{
+  background:linear-gradient(160deg, rgba(212,168,83,0.06), var(--panel));
+  border:1px solid var(--line); border-radius:14px; padding:13px; margin-bottom:10px;
+}
+.gratitude-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
+.gratitude-guide{font-family:var(--font-display); font-size:14.5px; font-weight:600; color:var(--gold-soft);}
+.gratitude-date{font-size:10.5px; color:var(--text-low);}
+.gratitude-text{font-size:13px; color:var(--text-mid); line-height:1.5; margin-bottom:8px; white-space:pre-wrap;}
+.gratitude-footer{display:flex; justify-content:space-between; align-items:center;}
+.gratitude-author{font-size:11.5px; color:var(--text-low); font-style:italic;}
+
 .moon-card{
   position:relative; overflow:hidden;
   border-radius:18px; padding:18px; margin-bottom:14px;
@@ -1746,6 +1771,32 @@ function renderEgregora(){
     {n:'Vela Ritual 7 Dias', p:'R$ 20', c:'#C1614A'}
   ];
 
+  const covensHtml = state.covens.map(c=>{
+    const col = tradColor(c.tradition);
+    return `<div class="coven-card">
+      <div class="coven-glyph" style="background:${col}22; color:${col}">${GLYPH[c.tradition]||'✦'}</div>
+      <button class="coven-info" data-action="open-coven" data-id="${c.id}">
+        <div class="coven-name">${escapeHtml(c.name)}</div>
+        <div class="coven-meta">${tradLabel(c.tradition)} · ${c.memberCount} membro${c.memberCount===1?'':'s'}</div>
+      </button>
+      <button class="toggle-pill ${c.joined?'on':''}" data-action="toggle-coven" data-id="${c.id}">${c.joined?'Membro':'Entrar'}</button>
+    </div>`;
+  }).join('') || '<div class="empty-hint">Nenhum coven fundado ainda. Que tal ser o(a) primeiro(a)?</div>';
+
+  const gratitudeHtml = state.gratitude.map(g=>`
+    <div class="gratitude-card">
+      <div class="gratitude-head">
+        <span class="gratitude-guide">✦ ${escapeHtml(g.guideName)}</span>
+        <span class="gratitude-date">${g.date}</span>
+      </div>
+      <div class="gratitude-text">${escapeHtml(g.testimony)}</div>
+      <div class="gratitude-footer">
+        <span class="gratitude-author">— ${escapeHtml(g.by)}</span>
+        <button class="light-btn ${g.sent?'active':''}" data-action="send-flower" data-id="${g.id}">${g.sent?'✿ Enviada':'🌸 Flor'} ${g.flowers>0?`· ${g.flowers}`:''}</button>
+      </div>
+    </div>
+  `).join('') || '<div class="empty-hint">Nenhuma graça registrada ainda. Compartilhe a sua ✦</div>';
+
   document.getElementById('screen-egregora').innerHTML = `
     <div class="section-head">
       <div class="section-title">Egrégora & Conexões</div>
@@ -1758,6 +1809,11 @@ function renderEgregora(){
       <button class="toggle-pill ${state.moonNotify?'on':''}" id="btnMoonNotify">${state.moonNotify?'✓ Lembrete ativado':'Ativar lembrete'}</button>
     </div>
 
+    <div class="section-head"><div class="section-title" style="font-size:19px">Covens & Terreiros</div>
+      <div class="section-sub">Grupos exclusivos por tradição</div></div>
+    <button class="btn-ghost" style="width:100%; margin-bottom:12px" id="btnNewCoven">+ Fundar um Coven</button>
+    <div style="margin-bottom:18px">${covensHtml}</div>
+
     <div class="section-head"><div class="section-title" style="font-size:19px">Sinastria Cósmica</div>
       <div class="section-sub">Seu Sol em ${state.profile.sun} · Lua em ${state.profile.moon} · Ascendente em ${state.profile.asc}</div></div>
     <div style="margin-bottom:18px">${affinityHtml}</div>
@@ -1769,6 +1825,11 @@ function renderEgregora(){
       <button class="btn-ghost" id="btnNewCandle">Acender</button>
     </div>
     <div style="margin-bottom:18px">${candlesHtml}</div>
+
+    <div class="section-head"><div class="section-title" style="font-size:19px">Mural de Graças Alcançadas</div>
+      <div class="section-sub">Gratidão aos Guias, Orixás e Santos</div></div>
+    <button class="btn-ghost" style="width:100%; margin-bottom:12px" id="btnNewGratitude">+ Registrar uma Graça</button>
+    <div style="margin-bottom:18px">${gratitudeHtml}</div>
 
     <div class="section-head"><div class="section-title" style="font-size:19px">Desapego Sagrado</div></div>
     <div class="market-scroll">
@@ -2022,6 +2083,37 @@ document.addEventListener('click', (e)=>{
         });
       }
     }
+    else if(action==='toggle-coven'){
+      const c = state.covens.find(c=>c.id===id);
+      const wasJoined = c.joined;
+      c.joined = !wasJoined; c.memberCount += c.joined?1:-1;
+      renderEgregora();
+      const call = c.joined ? api.joinCoven(c.id, state.profile.id) : api.leaveCoven(c.id, state.profile.id);
+      call.then(()=>{
+        toast(c.joined ? `Você entrou em ${c.name} ✦` : `Você saiu de ${c.name}`);
+      }).catch(err=>{
+        c.joined = wasJoined; c.memberCount += wasJoined?1:-1;
+        toast('Não foi possível atualizar sua entrada no coven.');
+        renderEgregora();
+        console.error(err);
+      });
+    }
+    else if(action==='open-coven'){ openCovenWall(id); }
+    else if(action==='send-flower'){
+      const g = state.gratitude.find(g=>g.id===id);
+      if(!g.sent){
+        g.sent = true; g.flowers++;
+        renderEgregora();
+        api.sendFlower(g.id, state.profile.id).then(()=>{
+          if(g.userId) api.createNotification(g.userId, state.profile.id, 'connection', g.id).catch(console.error);
+        }).catch(err=>{
+          g.sent = false; g.flowers--;
+          toast('Não foi possível enviar a flor agora.');
+          renderEgregora();
+          console.error(err);
+        });
+      }
+    }
   }
 
   if(e.target.id==='btnStartDuel') startDuel();
@@ -2035,6 +2127,8 @@ document.addEventListener('click', (e)=>{
   if(e.target.id==='btnRevealOracle') revealOracle();
   if(e.target.id==='btnNewGrim') openNewGrimoireModal();
   if(e.target.id==='btnNewCandle') addNewCandle();
+  if(e.target.id==='btnNewCoven') openNewCovenModal();
+  if(e.target.id==='btnNewGratitude') openNewGratitudeModal();
   if(e.target.id==='btnMoonNotify'){
     state.moonNotify = !state.moonNotify;
     toast(state.moonNotify ? 'Você será lembrado do ritual da Lua Cheia' : 'Lembrete removido');
@@ -2379,6 +2473,112 @@ function addNewCandle(){
   });
 }
 
+function openNewCovenModal(){
+  openModal(`
+    <div class="modal-title">Fundar um Coven</div>
+    <div class="form-field"><label for="covenName">Nome</label><input type="text" id="covenName" placeholder="Ex: Terreiro dos Filhos de Ogum" maxlength="60"></div>
+    <div class="form-field">
+      <label for="covenTradition">Tradição</label>
+      <select id="covenTradition">
+        ${Object.entries(TRADITIONS).map(([k,v])=>`<option value="${k}" ${state.profile.religion_path===k?'selected':''}>${GLYPH[k]} ${v.label}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-field"><label for="covenDesc">Descrição</label><textarea id="covenDesc" placeholder="Sobre o que é este coven?" maxlength="300"></textarea></div>
+    <div class="form-field">
+      <label for="covenPrivacy">Privacidade</label>
+      <select id="covenPrivacy">
+        <option value="public">Público — qualquer um pode entrar</option>
+        <option value="approval">Sob aprovação</option>
+        <option value="secret">Secreto</option>
+      </select>
+    </div>
+    <button class="btn-primary" style="width:100%" id="btnSaveCoven">Fundar Coven</button>
+  `);
+  document.getElementById('btnSaveCoven').addEventListener('click', (ev)=>{
+    const name = document.getElementById('covenName').value.trim();
+    const tradition = document.getElementById('covenTradition').value;
+    const description = document.getElementById('covenDesc').value.trim();
+    const privacy = document.getElementById('covenPrivacy').value;
+    if(!name){ toast('Dê um nome ao seu coven.'); return; }
+    const btn = ev.currentTarget;
+    btn.disabled = true; btn.textContent = 'Fundando…';
+    api.createCoven({name, tradition, description, privacy, createdBy: state.profile.id}).then(row=>{
+      state.covens.unshift({id:row.id, name:row.name, tradition:row.tradition, description:row.description, privacy:row.privacy, memberCount:1, createdBy: state.profile.id, joined:true});
+      closeModal();
+      renderEgregora();
+      toast(`${name} foi fundado ✦`);
+    }).catch(err=>{
+      btn.disabled = false; btn.textContent = 'Fundar Coven';
+      toast('Não foi possível fundar o coven agora.');
+      console.error(err);
+    });
+  });
+}
+
+async function openCovenWall(covenId){
+  const coven = state.covens.find(c=>c.id===covenId);
+  if(!coven) return;
+  if(!coven.joined){ toast('Entre no coven para ver o mural.'); return; }
+  openModal(`<div class="modal-title">${escapeHtml(coven.name)}</div>
+    <div class="node-sub" style="margin-bottom:12px">${tradLabel(coven.tradition)} · ${coven.memberCount} membro${coven.memberCount===1?'':'s'}</div>
+    <div class="form-field" style="display:flex; gap:8px; align-items:flex-start; margin-bottom:12px">
+      <input type="text" id="covenPostInput" placeholder="Compartilhe algo com o coven…" style="flex:1">
+      <button class="btn-ghost" id="btnCovenPost">Postar</button>
+    </div>
+    <div id="covenWallList" class="empty-hint">Carregando…</div>`);
+  document.getElementById('btnCovenPost').addEventListener('click', async ()=>{
+    const input = document.getElementById('covenPostInput');
+    const val = input.value.trim();
+    if(!val) return;
+    input.value = '';
+    try{
+      await api.postToCoven(covenId, state.profile.id, val);
+      await loadCovenWall();
+    }catch(err){ console.error(err); toast('Não foi possível publicar no coven.'); }
+  });
+  async function loadCovenWall(){
+    const list = document.getElementById('covenWallList');
+    if(!list) return;
+    try{
+      const rows = await api.fetchCovenPosts(covenId);
+      if(!list.isConnected) return;
+      if(!rows.length){ list.className='empty-hint'; list.textContent='Nenhuma publicação ainda. Seja a primeira voz.'; return; }
+      list.className = '';
+      list.innerHTML = rows.map(r=>`<div class="reflection-item"><b style="color:var(--text-hi)">${escapeHtml(r.author_name||'Alguém')}</b><div class="reflection-date">${relativeTime(r.created_at)}</div>${escapeHtml(r.content)}</div>`).join('');
+    }catch(err){
+      console.error(err);
+      if(list.isConnected){ list.className='empty-hint'; list.textContent='Não foi possível carregar o mural.'; }
+    }
+  }
+  loadCovenWall();
+}
+
+function openNewGratitudeModal(){
+  openModal(`
+    <div class="modal-title">Registrar uma Graça</div>
+    <div class="form-field"><label for="gratGuide">Guia / Orixá / Santo</label><input type="text" id="gratGuide" placeholder="Ex: Oxum, São Jorge, Exu Tranca-Rua…" maxlength="80"></div>
+    <div class="form-field"><label for="gratTestimony">Seu relato</label><textarea id="gratTestimony" placeholder="Conte o que aconteceu…" maxlength="1000"></textarea></div>
+    <button class="btn-primary" style="width:100%" id="btnSaveGratitude">Publicar no Mural</button>
+  `);
+  document.getElementById('btnSaveGratitude').addEventListener('click', (ev)=>{
+    const guideName = document.getElementById('gratGuide').value.trim();
+    const testimony = document.getElementById('gratTestimony').value.trim();
+    if(!guideName || !testimony){ toast('Preencha o guia e o relato.'); return; }
+    const btn = ev.currentTarget;
+    btn.disabled = true; btn.textContent = 'Publicando…';
+    api.postGratitude(state.profile.id, guideName, testimony).then(row=>{
+      state.gratitude.unshift({id:row.id, userId:state.profile.id, by:state.profile.display_name, guideName, testimony, flowers:0, sent:false, date:'hoje'});
+      closeModal();
+      renderEgregora();
+      toast('Graça registrada no mural ✦');
+    }).catch(err=>{
+      btn.disabled = false; btn.textContent = 'Publicar no Mural';
+      toast('Não foi possível publicar agora.');
+      console.error(err);
+    });
+  });
+}
+
 function revealOracle(){
   state.oracleCard = ORACLE_POOL[Math.floor(Math.random()*ORACLE_POOL.length)];
   const flip = document.getElementById('oracleFlip');
@@ -2409,15 +2609,31 @@ function shortDate(iso){
 
 async function loadAppData(userId){
   await ensureProfileLoaded(userId);
-  const [posts, myLikes, grimoire, candles, myLights] = await Promise.all([
+  const [posts, myLikes, grimoire, candles, myLights, covens, myCovenIds, gratitude, myFlowers] = await Promise.all([
     api.fetchPosts(),
     api.fetchMyLikedPostIds(userId),
     api.fetchGrimoire(userId),
     api.fetchCandles(),
-    api.fetchMyLitCandleIds(userId)
+    api.fetchMyLitCandleIds(userId),
+    api.fetchCovens(),
+    api.fetchMyCovenIds(userId),
+    api.fetchGratitude(),
+    api.fetchMyFlowerIds(userId)
   ]);
   state.myLikedPostIds = myLikes;
   state.myLitCandleIds = myLights;
+  state.myCovenIds = myCovenIds;
+  state.myFlowerIds = myFlowers;
+  state.covens = covens.map(row => ({
+    id: row.id, name: row.name, tradition: row.tradition, description: row.description,
+    privacy: row.privacy, memberCount: row.member_count, createdBy: row.created_by,
+    joined: myCovenIds.has(row.id)
+  }));
+  state.gratitude = gratitude.map(row => ({
+    id: row.id, userId: row.user_id, by: row.author_name || 'Alguém', guideName: row.guide_name,
+    testimony: row.testimony, flowers: row.flowers_count, sent: myFlowers.has(row.id),
+    date: shortDate(row.created_at)
+  }));
   state.posts = posts.map(row => ({
     id: row.id,
     userId: row.user_id,

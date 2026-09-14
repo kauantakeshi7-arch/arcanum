@@ -241,6 +241,101 @@ export function subscribeToMessages(conversationId, onInsert) {
   return () => supabase.removeChannel(channel);
 }
 
+/* ---------------- COVENS / TERREIROS ---------------- */
+export async function fetchCovens(limit = 40) {
+  const { data, error } = await supabase
+    .from('covens_with_counts')
+    .select('*')
+    .order('member_count', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchMyCovenIds(userId) {
+  const { data, error } = await supabase.from('coven_members').select('coven_id').eq('user_id', userId);
+  if (error) throw error;
+  return new Set(data.map(r => r.coven_id));
+}
+
+function slugify(name) {
+  return name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Math.random().toString(36).slice(2, 6);
+}
+
+export async function createCoven({ name, tradition, description, privacy, createdBy }) {
+  const { data, error } = await supabase
+    .from('covens')
+    .insert({ name, tradition, description, privacy: privacy || 'public', created_by: createdBy, slug: slugify(name) })
+    .select()
+    .single();
+  if (error) throw error;
+  await supabase.from('coven_members').insert({ coven_id: data.id, user_id: createdBy, role: 'founder' });
+  return data;
+}
+
+export async function joinCoven(covenId, userId) {
+  const { error } = await supabase.from('coven_members').insert({ coven_id: covenId, user_id: userId });
+  if (error) throw error;
+}
+
+export async function leaveCoven(covenId, userId) {
+  const { error } = await supabase.from('coven_members').delete().eq('coven_id', covenId).eq('user_id', userId);
+  if (error) throw error;
+}
+
+export async function fetchCovenPosts(covenId) {
+  const { data, error } = await supabase
+    .from('coven_posts_with_author')
+    .select('*')
+    .eq('coven_id', covenId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function postToCoven(covenId, userId, content) {
+  const { data, error } = await supabase
+    .from('coven_posts')
+    .insert({ coven_id: covenId, user_id: userId, content })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/* ---------------- MURAL DE GRAÇAS ALCANÇADAS ---------------- */
+export async function fetchGratitude(limit = 40) {
+  const { data, error } = await supabase
+    .from('gratitude_with_counts')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchMyFlowerIds(userId) {
+  const { data, error } = await supabase.from('gratitude_flowers').select('testimonial_id').eq('user_id', userId);
+  if (error) throw error;
+  return new Set(data.map(r => r.testimonial_id));
+}
+
+export async function postGratitude(userId, guideName, testimony) {
+  const { data, error } = await supabase
+    .from('gratitude_testimonials')
+    .insert({ user_id: userId, guide_name: guideName, testimony })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function sendFlower(testimonialId, userId) {
+  const { error } = await supabase.from('gratitude_flowers').insert({ testimonial_id: testimonialId, user_id: userId });
+  if (error) throw error;
+}
+
 export async function searchProfiles(query, excludeId, limit = 8) {
   const { data, error } = await supabase
     .from('profiles')
