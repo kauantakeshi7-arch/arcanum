@@ -2310,6 +2310,15 @@ function drawVeilResponse(category){
   const pool = VEIL_RESPONSES[category] || VEIL_RESPONSES.geral;
   return pool[Math.floor(Math.random()*pool.length)];
 }
+async function askVeil(category, question){
+  const btn = document.getElementById('btnAskVeil');
+  const input = document.getElementById('veilQuestionInput');
+  if(btn){ btn.disabled = true; btn.textContent = 'Consultando…'; }
+  const aiAnswer = await api.askGuardianAI(category, question);
+  state.veilHistory.push({q: question, a: aiAnswer || drawVeilResponse(category)});
+  if(state.veilHistory.length > 5) state.veilHistory.shift();
+  renderEgregora();
+}
 function renderVeilOracleCard(){
   const history = state.veilHistory.map(h=>`
     <div class="veil-exchange">
@@ -3153,9 +3162,7 @@ document.addEventListener('click', (e)=>{
     const q = input.value.trim();
     if(!q){ toast('Escreva sua pergunta ao Guardião.'); return; }
     state.veilCategory = category;
-    state.veilHistory.push({q, a: drawVeilResponse(category)});
-    if(state.veilHistory.length > 5) state.veilHistory.shift();
-    renderEgregora();
+    askVeil(category, q);
   }
   if(e.target.id==='btnCopyInvite'){
     const input = document.getElementById('inviteLinkInput');

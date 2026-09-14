@@ -502,3 +502,20 @@ export async function fetchUserCandleLightsCount(userId) {
   if (error) throw error;
   return count || 0;
 }
+
+/* ---------------- GUARDIÃO DO VÉU (IA) ---------------- */
+// Chama a Edge Function guardian-ai (Gemini roda no servidor, a chave nunca
+// chega ao navegador). Se falhar por qualquer motivo, retorna null para o
+// chamador usar a resposta local pré-escrita como respaldo.
+export async function askGuardianAI(category, question) {
+  try {
+    const { data, error } = await supabase.functions.invoke('guardian-ai', {
+      body: { category, question }
+    });
+    if (error || !data || data.fallback || !data.answer) return null;
+    return data.answer;
+  } catch (err) {
+    console.error('askGuardianAI falhou, usando resposta local:', err);
+    return null;
+  }
+}
