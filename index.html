@@ -1629,8 +1629,21 @@ function renderAgora(){
     <div class="feed-tabs">
       ${tabs.map(([id,label])=>`<button class="feed-tab ${state.feedTab===id?'active':''}" data-feedtab="${id}">${label}</button>`).join('')}
     </div>
-    ${posts.length ? posts.map(renderPostCard).join('') : '<div class="empty-hint">Nada por aqui ainda nesta senda. Que tal ser a primeira pessoa a publicar?</div>'}
+    ${posts.length ? posts.map(renderPostCard).join('') : renderAgoraEmptyState()}
   `;
+  if(state.feedTab==='seguindo' && !posts.length){
+    const btn = document.getElementById('btnFindPeopleEmpty');
+    if(btn) btn.addEventListener('click', openFindPeopleModal);
+  }
+}
+function renderAgoraEmptyState(){
+  if(state.feedTab==='seguindo'){
+    return `<div class="empty-hint">
+      Você ainda não segue ninguém. Siga outras pessoas para ver as publicações delas aqui.
+      <button class="btn-ghost" id="btnFindPeopleEmpty" style="width:100%; margin-top:12px">🔎 Buscar pessoas</button>
+    </div>`;
+  }
+  return '<div class="empty-hint">Nada por aqui ainda nesta senda. Que tal ser a primeira pessoa a publicar?</div>';
 }
 
 /* =========================================================
@@ -2944,6 +2957,7 @@ document.addEventListener('click', (e)=>{
       else{ state.followingIds.add(target); state.followCounts.following += 1; }
       const rerender = act.dataset.rerender;
       if(rerender==='profile-modal') act.textContent = wasFollowing ? 'Seguir' : 'Deixar de seguir';
+      else if(rerender==='find-people') act.textContent = wasFollowing ? 'Seguir' : 'Seguindo';
       else if(rerender==='agora') renderAgora();
       else if(rerender==='egregora') renderEgregora();
       const call = wasFollowing ? api.unfollowUser(state.profile.id, target) : api.followUser(state.profile.id, target);
@@ -3200,6 +3214,44 @@ function openNewDmSearch(){
             }catch(err){ console.error(err); toast('Não foi possível iniciar a conversa.'); }
           });
         });
+      }catch(err){
+        console.error(err);
+        if(results.isConnected){ results.className='empty-hint'; results.textContent='Falha ao buscar.'; }
+      }
+    }, 300);
+  });
+}
+
+function openFindPeopleModal(){
+  openModal(`<div class="modal-title">Buscar pessoas</div>
+    <div class="form-field"><input type="text" id="findPeopleInput" placeholder="Buscar pelo nome de exibição…" autocomplete="off"></div>
+    <div id="findPeopleResults" class="empty-hint">Digite ao menos 2 letras.</div>`);
+  const input = document.getElementById('findPeopleInput');
+  requestAnimationFrame(()=>input.focus());
+  let debounce;
+  input.addEventListener('input', ()=>{
+    clearTimeout(debounce);
+    debounce = setTimeout(async ()=>{
+      const q = input.value.trim();
+      const results = document.getElementById('findPeopleResults');
+      if(!results) return;
+      if(q.length < 2){ results.className = 'empty-hint'; results.textContent = 'Digite ao menos 2 letras.'; return; }
+      try{
+        const rows = await api.searchProfiles(q, state.profile.id);
+        if(!results.isConnected) return;
+        if(!rows.length){ results.className = 'empty-hint'; results.textContent = 'Nenhum buscador encontrado.'; return; }
+        results.className = '';
+        results.innerHTML = rows.map(p=>{
+          const name = escapeHtml(p.display_name);
+          const isFollowing = state.followingIds.has(p.id);
+          return `<div class="dm-convo-row" style="cursor:default">
+            <button class="post-head-link" style="flex:1" data-action="view-profile" data-id="${p.id}">
+              <div class="avatar-sm" style="background:${tradColor('solitario')}">${initials(p.display_name)}</div>
+              <div class="dm-convo-info"><div class="dm-convo-name">${name}</div></div>
+            </button>
+            <button class="btn-ghost" style="padding:6px 14px" data-action="follow-user" data-target="${p.id}" data-rerender="find-people">${isFollowing?'Seguindo':'Seguir'}</button>
+          </div>`;
+        }).join('');
       }catch(err){
         console.error(err);
         if(results.isConnected){ results.className='empty-hint'; results.textContent='Falha ao buscar.'; }
