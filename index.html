@@ -661,6 +661,14 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .reflection-item{padding:12px 0; border-bottom:1px solid var(--line-soft); font-size:13px; color:var(--text-mid); line-height:1.5;}
 .reflection-date{font-size:10.5px; color:var(--text-low); margin-bottom:4px;}
 
+.stealth-info-card{
+  background:linear-gradient(160deg, rgba(139,108,242,0.08), var(--panel));
+  border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:14px;
+}
+.stealth-info-card p{font-size:12.5px; color:var(--text-mid); line-height:1.6; margin-bottom:8px;}
+.stealth-info-card p:last-child{margin-bottom:0;}
+.stealth-info-card b{color:var(--text-hi);}
+
 /* ---------- BOTTOM NAV & MINI PLAYER ---------- */
 .mini-player{
   position:absolute; left:12px; right:12px; bottom:76px; z-index:14;
@@ -694,6 +702,34 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
   content:''; position:absolute; top:-9px; left:50%; transform:translateX(-50%);
   width:4px; height:4px; border-radius:50%; background:var(--gold-soft);
 }
+
+/* ---------- MODO DISCRETO (calculadora-disfarce) ---------- */
+.stealth-screen{
+  position:fixed; inset:0; z-index:999;
+  display:flex; flex-direction:column;
+  background:#000; padding:16px; padding-top:max(16px, env(safe-area-inset-top));
+  gap:12px; -webkit-user-select:none; user-select:none;
+}
+.calc-display{
+  flex-shrink:0; color:#fff; font-size:clamp(36px, 10vw, 56px); font-weight:300; text-align:right;
+  padding:8px 8px 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-family:-apple-system, Helvetica, Arial, sans-serif;
+}
+.calc-grid{
+  flex:1; min-height:0; display:grid;
+  grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(5, 1fr);
+  gap:min(10px, 2vh);
+  padding-bottom:max(8px, env(safe-area-inset-bottom));
+}
+.calc-btn{
+  border-radius:999px; font-size:clamp(16px, 5vw, 24px); font-weight:500; min-height:0;
+  background:#333; color:#fff; font-family:-apple-system, Helvetica, Arial, sans-serif;
+  transition:filter .1s;
+}
+.calc-btn:active{filter:brightness(1.4);}
+.calc-fn{background:#a5a5a5; color:#000;}
+.calc-op{background:#ff9f0a; color:#fff;}
+.calc-zero{grid-column:span 2; text-align:left; padding-left:26px;}
 
 /* ---------- MODALS ---------- */
 .modal-overlay{
@@ -1120,6 +1156,38 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-vis
     <div class="modal-sheet" id="modalSheet" role="dialog" aria-modal="true" tabindex="-1"></div>
   </div>
 
+</div>
+
+<!-- MODO DISCRETO: disfarce de calculadora. Três toques no brasão do Arcanum
+     (topo da tela) abrem isto por cima de tudo; digitar o código pessoal
+     seguido de "=" volta ao Arcanum. Veja a explicação completa no Perfil. -->
+<div class="stealth-screen" id="stealthScreen" style="display:none" role="dialog" aria-label="Calculadora">
+  <div class="calc-display" id="calcDisplay">0</div>
+  <div class="calc-grid">
+    <button class="calc-btn calc-fn" data-calc="C">C</button>
+    <button class="calc-btn calc-fn" data-calc="±">±</button>
+    <button class="calc-btn calc-fn" data-calc="%">%</button>
+    <button class="calc-btn calc-op" data-calc="÷">÷</button>
+
+    <button class="calc-btn" data-calc="7">7</button>
+    <button class="calc-btn" data-calc="8">8</button>
+    <button class="calc-btn" data-calc="9">9</button>
+    <button class="calc-btn calc-op" data-calc="×">×</button>
+
+    <button class="calc-btn" data-calc="4">4</button>
+    <button class="calc-btn" data-calc="5">5</button>
+    <button class="calc-btn" data-calc="6">6</button>
+    <button class="calc-btn calc-op" data-calc="-">-</button>
+
+    <button class="calc-btn" data-calc="1">1</button>
+    <button class="calc-btn" data-calc="2">2</button>
+    <button class="calc-btn" data-calc="3">3</button>
+    <button class="calc-btn calc-op" data-calc="+">+</button>
+
+    <button class="calc-btn calc-zero" data-calc="0">0</button>
+    <button class="calc-btn" data-calc=".">.</button>
+    <button class="calc-btn calc-eq" data-calc="=">=</button>
+  </div>
 </div>
 
 <script type="module">
@@ -2041,7 +2109,23 @@ function renderPerfil(){
       <button class="subtab ${state.profileSubtab==='reflexoes'?'active':''}" data-subtab="reflexoes">Reflexões</button>
     </div>
     ${state.profileSubtab==='grimorio' ? photosGrid : reflections}
-    <button class="btn-ghost" style="width:100%; margin-top:22px" id="btnLogout">Sair da conta</button>
+
+    <div class="section-head" style="margin-top:28px"><div class="section-title" style="font-size:19px">🥷 Modo Discreto — Seu Refúgio Seguro</div></div>
+    <div class="stealth-info-card">
+      <p>Sabemos que nem todo mundo pode viver sua fé livremente. Se você mora com quem não entende ou não respeita sua senda espiritual, o Arcanum te protege.</p>
+      <p><b>Três toques rápidos no símbolo do Arcanum</b> (o brasão ali no topo da tela) transformam este app, na hora, numa calculadora comum e funcional — ninguém vai saber que existe um templo aqui dentro.</p>
+      <p>Para voltar, digite seu <b>código pessoal</b> na calculadora e aperte "=". Simples assim. Sua segurança e privacidade vêm sempre primeiro ✦</p>
+    </div>
+    <div class="form-field">
+      <label for="stealthPinInput">Seu código pessoal (4 a 8 números)</label>
+      <input type="text" id="stealthPinInput" inputmode="numeric" maxlength="8" value="${escapeHtml(p.stealthPin)}">
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:22px">
+      <button class="btn-ghost" style="flex:1" id="btnSaveStealthPin">Salvar código</button>
+      <button class="btn-primary" style="flex:1; margin-top:0" id="btnTestStealth">Testar agora</button>
+    </div>
+
+    <button class="btn-ghost" style="width:100%" id="btnLogout">Sair da conta</button>
   `;
 }
 
@@ -2059,7 +2143,81 @@ function renderAll(){
   renderRightPanel();
 }
 
+/* =========================================================
+   MODO DISCRETO / COFRE OCULTO
+   Três toques no brasão escondem o Arcanum atrás de uma calculadora real
+   e funcional. Digitar o código pessoal (padrão 7777) seguido de "="
+   devolve o Arcanum — sem operadores no meio, ou a calculadora só calcula.
+   ========================================================= */
+let brandTapCount = 0, brandTapTimer = null;
+function handleBrandTap(){
+  brandTapCount++;
+  clearTimeout(brandTapTimer);
+  brandTapTimer = setTimeout(()=>{ brandTapCount = 0; }, 1100);
+  if(brandTapCount >= 3){
+    brandTapCount = 0;
+    enterStealth();
+  }
+}
+let calcState = {expr:'0', pinBuffer:'', freshStart:true};
+function enterStealth(){
+  calcState = {expr:'0', pinBuffer:'', freshStart:true};
+  renderCalcDisplay();
+  document.getElementById('stealthScreen').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'none';
+}
+function exitStealth(){
+  document.getElementById('stealthScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'flex';
+  toast('Bem-vindo(a) de volta ao Arcanum ✦');
+}
+function renderCalcDisplay(){
+  const el = document.getElementById('calcDisplay');
+  if(el) el.textContent = calcState.expr;
+}
+function calcPress(val){
+  const isDigit = /^[0-9.]$/.test(val);
+  if(val === 'C'){
+    calcState = {expr:'0', pinBuffer:'', freshStart:true};
+  } else if(val === '='){
+    if(calcState.pinBuffer && calcState.pinBuffer === state.profile.stealthPin){
+      exitStealth();
+      return;
+    }
+    try{
+      const safe = calcState.expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/[^0-9+\-*/.]/g,'');
+      // eslint-disable-next-line no-new-func — controlled input: only digits/operators from our own buttons ever reach `expr`.
+      const result = Function('"use strict"; return (' + safe + ')')();
+      calcState.expr = Number.isFinite(result) ? String(Math.round(result*1e10)/1e10) : 'Erro';
+    }catch(e){ calcState.expr = 'Erro'; }
+    calcState.pinBuffer = '';
+    calcState.freshStart = true;
+  } else if(val === '±'){
+    calcState.expr = calcState.expr.startsWith('-') ? calcState.expr.slice(1) : '-' + calcState.expr;
+  } else if(val === '%'){
+    try{ calcState.expr = String(parseFloat(calcState.expr) / 100); }catch(e){}
+  } else if(isDigit){
+    calcState.pinBuffer += val;
+    calcState.expr = calcState.freshStart ? val : calcState.expr + val;
+    calcState.freshStart = false;
+  } else {
+    // Operator: a real math step, so this can no longer be "just the PIN".
+    calcState.pinBuffer = '';
+    calcState.expr = calcState.expr + val;
+    calcState.freshStart = false;
+  }
+  renderCalcDisplay();
+}
+
 document.addEventListener('click', (e)=>{
+  const calcBtn = e.target.closest('[data-calc]');
+  if(calcBtn){ calcPress(calcBtn.dataset.calc); return; }
+
+  // Modo Discreto: 3 toques rápidos no brasão do Arcanum (topbar ou menu
+  // lateral) escondem o app inteiro atrás de uma calculadora de verdade.
+  if(e.target.closest('.brand')){ handleBrandTap(); }
+
   const nav = e.target.closest('[data-nav]');
   if(nav){ setNav(nav.dataset.nav); return; }
 
@@ -2207,6 +2365,21 @@ document.addEventListener('click', (e)=>{
   }
   if(e.target.id==='btnLogout'){
     signOut().then(()=>{ window.location.reload(); }).catch(err=>{ toast('Não foi possível sair agora.'); console.error(err); });
+  }
+  if(e.target.id==='btnTestStealth'){ enterStealth(); }
+  if(e.target.id==='btnSaveStealthPin'){
+    const input = document.getElementById('stealthPinInput');
+    const pin = input.value.trim();
+    if(!/^[0-9]{4,8}$/.test(pin)){ toast('O código precisa ter só números, de 4 a 8 dígitos.'); return; }
+    const prev = state.profile.stealthPin;
+    state.profile.stealthPin = pin;
+    updateProfile(state.profile.id, {stealth_pin: pin}).then(()=>{
+      toast('Código do Modo Discreto atualizado ✦');
+    }).catch(err=>{
+      state.profile.stealthPin = prev;
+      toast('Não foi possível salvar o código agora.');
+      console.error(err);
+    });
   }
   if(e.target.id==='modalOverlay'){ closeModal(); }
 });
@@ -2742,6 +2915,7 @@ async function ensureProfileLoaded(userId){
     sun: profile.sun_sign || '—',
     moon: profile.moon_sign || '—',
     asc: profile.ascendant_sign || '—',
+    stealthPin: profile.stealth_pin || '7777',
     // "Já registrou hoje" is derived from the DB date, so refreshing the
     // page doesn't let someone re-trigger the streak bonus the same day.
     loggedToday: profile.logged_today_at === new Date().toISOString().slice(0,10)
