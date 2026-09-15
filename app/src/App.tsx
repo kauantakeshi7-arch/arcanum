@@ -4,6 +4,7 @@ import { AgoraDataProvider } from './context/AgoraDataContext';
 import { CovensDataProvider } from './context/CovensDataContext';
 import { TrilhasDataProvider } from './context/TrilhasDataContext';
 import { SantuarioDataProvider } from './context/SantuarioDataContext';
+import { EgregoraDataProvider } from './context/EgregoraDataContext';
 import { ModalProvider } from './components/modal/ModalProvider';
 import { ToastProvider } from './components/toast/ToastProvider';
 import { AuthScreen } from './features/auth/AuthScreen';
@@ -12,6 +13,7 @@ import { AgoraScreen } from './features/agora/AgoraScreen';
 import { CovensScreen } from './features/covens/CovensScreen';
 import { TrilhasScreen } from './features/trilhas/TrilhasScreen';
 import { SantuarioScreen } from './features/santuario/SantuarioScreen';
+import { EgregoraScreen } from './features/egregora/EgregoraScreen';
 import { ComingSoon } from './routes/ComingSoon';
 
 function Gate() {
@@ -28,20 +30,22 @@ function Gate() {
       <AgoraDataProvider>
         <TrilhasDataProvider>
           <SantuarioDataProvider>
-            <ModalProvider>
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<AppShell />}>
-                    <Route index element={<AgoraScreen />} />
-                    <Route path="covens" element={<CovensScreen />} />
-                    <Route path="trilhas" element={<TrilhasScreen />} />
-                    <Route path="altar" element={<SantuarioScreen />} />
-                    <Route path="egregora" element={<ComingSoon title="Egrégora" />} />
-                    <Route path="perfil" element={<ComingSoon title="Perfil" />} />
-                  </Route>
-                </Routes>
-              </BrowserRouter>
-            </ModalProvider>
+            <EgregoraDataProvider>
+              <ModalProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<AppShell />}>
+                      <Route index element={<AgoraScreen />} />
+                      <Route path="covens" element={<CovensScreen />} />
+                      <Route path="trilhas" element={<TrilhasScreen />} />
+                      <Route path="altar" element={<SantuarioScreen />} />
+                      <Route path="egregora" element={<EgregoraScreen />} />
+                      <Route path="perfil" element={<ComingSoon title="Perfil" />} />
+                    </Route>
+                  </Routes>
+                </BrowserRouter>
+              </ModalProvider>
+            </EgregoraDataProvider>
           </SantuarioDataProvider>
         </TrilhasDataProvider>
       </AgoraDataProvider>

@@ -1,0 +1,244 @@
+/* Portado de index.html:644-673, 771-808 (afinidades, vela/gratidão, mercado, moon-card/veil-card) */
+.screen {
+  padding: 16px 16px 100px;
+}
+.affinityRow {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.affinityAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: #fff;
+}
+.affinityPct {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--emerald);
+  width: 44px;
+  text-align: right;
+}
+.affinityInfo {
+  flex: 1;
+}
+.affinityName {
+  font-size: 13px;
+  font-weight: 600;
+}
+.affinitySigns {
+  font-size: 10.5px;
+  color: var(--text-low);
+  margin-top: 1px;
+}
+.affinityBarTrack {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--panel-3);
+  margin-top: 6px;
+  overflow: hidden;
+}
+.affinityBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--emerald), var(--gold-soft));
+  border-radius: 2px;
+}
+
+.moonCard {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 14px;
+  background: radial-gradient(circle at 85% 15%, rgba(212, 168, 83, 0.22), transparent 55%), var(--panel);
+  border: 1px solid rgba(212, 168, 83, 0.25);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+}
+.moonCountdown {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--gold-soft);
+  margin: 6px 0 10px;
+  text-shadow: 0 0 18px rgba(212, 168, 83, 0.35);
+}
+.togglePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  color: var(--text-mid);
+  transition: background 0.2s, border-color 0.2s;
+}
+.togglePill.on {
+  color: var(--emerald);
+  border-color: rgba(52, 199, 154, 0.4);
+  background: rgba(52, 199, 154, 0.08);
+}
+
+.veilCard {
+  position: relative;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 14px;
+  background: radial-gradient(circle at 15% 10%, rgba(139, 108, 242, 0.18), transparent 55%), var(--panel);
+  border: 1px solid rgba(139, 108, 242, 0.28);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+}
+.veilHistory {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.veilExchange {
+  background: rgba(7, 8, 12, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.veilQuestion {
+  font-size: 12.5px;
+  color: var(--text-mid);
+  font-style: italic;
+  margin-bottom: 6px;
+}
+.veilAnswer {
+  font-size: 12.5px;
+  color: var(--text-hi);
+  line-height: 1.55;
+}
+
+.candleItem {
+  display: flex;
+  gap: 12px;
+  padding: 12px 10px;
+  margin-bottom: 2px;
+  border-radius: 12px;
+  align-items: center;
+}
+.candleFlameMini {
+  font-size: 17px;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(212, 168, 83, 0.25), transparent 70%);
+}
+.candleBody {
+  flex: 1;
+}
+.candleIntention {
+  font-size: 12.5px;
+  color: var(--text-mid);
+  line-height: 1.4;
+}
+.candleLights {
+  font-size: 11px;
+  color: var(--gold-soft);
+  margin-top: 3px;
+  font-weight: 600;
+}
+.lightBtn {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold-soft);
+  border: 1px solid rgba(212, 168, 83, 0.35);
+  border-radius: 20px;
+  padding: 7px 12px;
+}
+.lightBtn.active {
+  background: rgba(212, 168, 83, 0.14);
+}
+
+.gratitudeCard {
+  background: linear-gradient(160deg, rgba(212, 168, 83, 0.06), var(--panel));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 13px;
+  margin-bottom: 10px;
+}
+.gratitudeHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.gratitudeGuide {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--gold-soft);
+}
+.gratitudeDate {
+  font-size: 10.5px;
+  color: var(--text-low);
+}
+.gratitudeText {
+  font-size: 13px;
+  color: var(--text-mid);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+.gratitudeFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.gratitudeAuthor {
+  font-size: 11.5px;
+  color: var(--text-low);
+  font-style: italic;
+}
+
+.marketScroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.marketItem {
+  flex-shrink: 0;
+  width: 118px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+}
+.marketThumb {
+  height: 70px;
+  border-radius: 9px;
+  margin-bottom: 8px;
+}
+.marketName {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 3px;
+}
+.marketPrice {
+  font-size: 12px;
+  color: var(--gold-soft);
+  font-weight: 700;
+}

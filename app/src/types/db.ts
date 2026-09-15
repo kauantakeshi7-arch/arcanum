@@ -11,6 +11,9 @@ export interface Profile {
   mana_xp: number;
   streak_days: number;
   logged_today_at: string | null;
+  sun_sign: string | null;
+  moon_sign: string | null;
+  ascendant_sign: string | null;
   is_verified: boolean;
   referred_by: string | null;
   created_at: string;
