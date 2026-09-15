@@ -1,0 +1,271 @@
+/* Portado de index.html:437-546 (.tree-*, .node-*, .duel-card, .lunar-*, .leaderboard/.lb-*) */
+.screen {
+  padding: 16px 16px 100px;
+}
+.treeWrap {
+  position: relative;
+  padding-left: 6px;
+  margin-top: 6px;
+}
+.treeWrap::before {
+  content: '';
+  position: absolute;
+  left: 27px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: linear-gradient(var(--emerald), var(--gold) 40%, var(--line) 65%, transparent);
+  opacity: 0.7;
+}
+.treeNode {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  position: relative;
+}
+.nodeDot {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  border: 1.5px solid var(--line);
+  background: var(--panel);
+  transition: transform 0.15s;
+}
+.nodeDot.done {
+  background: linear-gradient(145deg, var(--emerald), #1e8a68);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(52, 199, 154, 0.15), 0 4px 14px rgba(52, 199, 154, 0.3);
+}
+.nodeDot.locked {
+  opacity: 0.38;
+  background: var(--panel-2);
+}
+.nodeDot.locked svg {
+  width: 18px;
+  height: 18px;
+}
+.nodeDot.current {
+  border-color: var(--gold);
+  color: var(--gold-soft);
+  background: linear-gradient(155deg, rgba(212, 168, 83, 0.18), var(--panel));
+  box-shadow: 0 0 0 3px rgba(212, 168, 83, 0.15), 0 4px 18px rgba(212, 168, 83, 0.35);
+}
+.nodeInfo {
+  flex: 1;
+}
+.nodeTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+.nodeSub {
+  font-size: 11.5px;
+  color: var(--text-low);
+  margin-top: 2px;
+}
+.nodeXp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--gold-soft);
+  margin-top: 5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(212, 168, 83, 0.1);
+  border: 1px solid rgba(212, 168, 83, 0.25);
+}
+.nodeXp.doneTag {
+  color: var(--emerald);
+  background: rgba(52, 199, 154, 0.1);
+  border-color: rgba(52, 199, 154, 0.25);
+}
+
+.duelCard {
+  position: relative;
+  margin-top: 8px;
+  padding: 20px 18px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(139, 108, 242, 0.18), rgba(52, 199, 154, 0.08));
+  border: 1px solid rgba(139, 108, 242, 0.35);
+  box-shadow: 0 12px 34px rgba(139, 108, 242, 0.12);
+  text-align: center;
+  overflow: hidden;
+}
+.duelSectionTitle {
+  font-size: 19px;
+  position: relative;
+}
+.duelIcon {
+  width: 22px;
+  height: 22px;
+  vertical-align: -5px;
+  margin-right: 2px;
+  filter: drop-shadow(0 0 6px rgba(212, 168, 83, 0.5));
+}
+.lunarCard {
+  margin-bottom: 16px;
+  text-align: left;
+}
+.lunarSectionSub {
+  margin-bottom: 14px;
+}
+.lunarQuestList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lunarQuestRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: rgba(7, 8, 12, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 12px;
+}
+.lunarQuestRow.done {
+  opacity: 0.65;
+}
+.lunarQuestGlyph {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.lunarQuestInfo {
+  flex: 1;
+  min-width: 0;
+}
+.lunarQuestTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-hi);
+  margin-bottom: 2px;
+}
+.lunarQuestSub {
+  font-size: 11.5px;
+  color: var(--text-mid);
+  line-height: 1.4;
+  margin-bottom: 5px;
+}
+.lunarQuestTag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gold-soft);
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(212, 168, 83, 0.1);
+  border: 1px solid rgba(212, 168, 83, 0.25);
+}
+.lunarQuestTag.doneTag {
+  color: var(--emerald);
+  background: rgba(52, 199, 154, 0.1);
+  border-color: rgba(52, 199, 154, 0.25);
+}
+.lunarQuestBtn {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.leaderboard {
+  margin-top: 16px;
+  text-align: left;
+  position: relative;
+}
+.lbRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 8px;
+  border-radius: 10px;
+  margin-bottom: 2px;
+  font-size: 12.5px;
+}
+.lbRank {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-low);
+  background: var(--panel-3);
+}
+.lbRank.gold {
+  background: linear-gradient(145deg, #e8c989, #b4832f);
+  color: #2a1c05;
+}
+.lbRank.silver {
+  background: linear-gradient(145deg, #dadfe8, #9aa3b5);
+  color: #22262f;
+}
+.lbRank.bronze {
+  background: linear-gradient(145deg, #d79a6b, #9c5f34);
+  color: #2a1806;
+}
+.lbName {
+  flex: 1;
+  color: var(--text-mid);
+}
+.lbName.me {
+  color: var(--gold-soft);
+  font-weight: 700;
+}
+.lbRow.meRow {
+  background: rgba(212, 168, 83, 0.08);
+  border: 1px solid rgba(212, 168, 83, 0.25);
+}
+.lbMana {
+  color: var(--emerald);
+  font-weight: 600;
+}
+
+.quizQ {
+  margin-bottom: 16px;
+}
+.quizQText {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+.quizOpt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 11px 13px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  font-size: 13px;
+  color: var(--text-mid);
+}
+.quizOpt.correct {
+  border-color: var(--emerald);
+  background: rgba(52, 199, 154, 0.12);
+  color: var(--emerald);
+}
+.quizOpt.wrong {
+  border-color: var(--danger);
+  background: rgba(193, 92, 92, 0.12);
+  color: var(--danger);
+}
+.quizOpt:disabled {
+  pointer-events: none;
+}

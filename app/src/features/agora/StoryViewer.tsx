@@ -16,7 +16,7 @@ export function StoryViewer({ order, startGroupIndex, onClose }: {
   onClose: () => void;
 }) {
   const { profile } = useSession();
-  const { markStorySeen } = useAgoraData();
+  const { storyViewIds, markStorySeen } = useAgoraData();
   const [groupIndex, setGroupIndex] = useState(startGroupIndex);
   const [itemIndex, setItemIndex] = useState(0);
   const [pct, setPct] = useState(0);
@@ -52,7 +52,7 @@ export function StoryViewer({ order, startGroupIndex, onClose }: {
     setViewCount(null);
     if (isMine) {
       api.fetchStoryViewCount(item.id).then(setViewCount).catch(() => {});
-    } else {
+    } else if (!storyViewIds.has(item.id)) {
       markStorySeen(item.id);
       api.createNotification(group.userId, profile!.id, 'story_view', item.id).catch(console.error);
     }

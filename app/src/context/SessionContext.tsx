@@ -9,6 +9,7 @@ interface SessionContextValue {
   profile: Profile | null;
   loading: boolean;
   refreshProfile: () => Promise<void>;
+  adjustManaXp: (delta: number) => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -62,8 +63,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (session) await loadProfile(session.user.id);
   }
 
+  // Atualização local otimista de mana_xp (Trilhas/Passe Lunar já persistem a
+  // mudança real via updateProfile — isso só evita esperar um refetch).
+  function adjustManaXp(delta: number) {
+    setProfile((prev) => (prev ? { ...prev, mana_xp: prev.mana_xp + delta } : prev));
+  }
+
   return (
-    <SessionContext.Provider value={{ session, profile, loading, refreshProfile }}>
+    <SessionContext.Provider value={{ session, profile, loading, refreshProfile, adjustManaXp }}>
       {children}
     </SessionContext.Provider>
   );
