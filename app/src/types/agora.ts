@@ -40,11 +40,4 @@ export interface StoryGroup {
   items: StoryItem[];
 }
 
-export interface CovenTeaserItem {
-  id: string;
-  name: string;
-  tradition: string;
-  joined: boolean;
-}
-
 export type FeedTab = 'para-voce' | 'seguindo' | 'minha-senda';

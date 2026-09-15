@@ -9,11 +9,14 @@ import { ModalProvider } from '../modal/ModalProvider';
 // AppShell renderiza <Stories /> (usa useSession/useAgoraData) e o sino de
 // notificações (usa useModal) — sem sessão, os dados da Ágora ficam vazios e
 // nenhuma chamada de rede é feita (ver AgoraDataContext: só busca com userId).
+// ModalProvider fica por dentro dos provedores de dados — mesma ordem de
+// App.tsx — porque o conteúdo de um modal só enxerga contexto de quem o
+// envolve, não de quem chamou push().
 function renderShell(initialPath = '/') {
   return render(
     <SessionProvider>
-      <ModalProvider>
-        <AgoraDataProvider>
+      <AgoraDataProvider>
+        <ModalProvider>
           <MemoryRouter initialEntries={[initialPath]}>
             <Routes>
               <Route path="/" element={<AppShell />}>
@@ -22,8 +25,8 @@ function renderShell(initialPath = '/') {
               </Route>
             </Routes>
           </MemoryRouter>
-        </AgoraDataProvider>
-      </ModalProvider>
+        </ModalProvider>
+      </AgoraDataProvider>
     </SessionProvider>,
   );
 }

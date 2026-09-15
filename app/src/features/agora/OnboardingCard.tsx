@@ -1,5 +1,6 @@
 import { useSession } from '../../context/SessionContext';
 import { useAgoraData } from '../../context/AgoraDataContext';
+import { useCovensData } from '../../context/CovensDataContext';
 import styles from './AgoraScreen.module.css';
 
 // Porte de index.html:1996-2022 (renderOnboardingCard).
@@ -9,7 +10,8 @@ export function OnboardingCard({ onGoToCovens, onOpenFindPeople, onOpenNewPost }
   onOpenNewPost: () => void;
 }) {
   const { profile } = useSession();
-  const { posts, covens, followingIds, onboardingDismissed, dismissOnboarding } = useAgoraData();
+  const { posts, followingIds, onboardingDismissed, dismissOnboarding } = useAgoraData();
+  const { covens } = useCovensData();
   if (onboardingDismissed || !profile) return null;
 
   const hasFollow = followingIds.size > 0;

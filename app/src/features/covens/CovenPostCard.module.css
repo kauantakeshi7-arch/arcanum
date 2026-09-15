@@ -1,0 +1,122 @@
+/* Portado de index.html:306-389 (subconjunto usado pelo mural do coven) */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px 16px 16px 5px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.postHead {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+}
+.postHeadLink {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+}
+.postMeta {
+  flex: 1;
+  min-width: 0;
+}
+.postName {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+.postTime {
+  font-size: 11px;
+  color: var(--text-low);
+  margin-top: 1px;
+}
+.postKebab {
+  flex-shrink: 0;
+  font-size: 18px;
+  color: var(--text-low);
+  padding: 4px 8px;
+  line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.postText {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-mid);
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+}
+.postPhoto {
+  width: 100%;
+  max-height: 340px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  display: block;
+}
+.reactionBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+}
+.reactionBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-low);
+  padding: 6px 9px;
+  border-radius: 20px;
+  transition: color 0.15s, background 0.2s;
+}
+.reactionBtn svg {
+  width: 16px;
+  height: 16px;
+}
+.reactionBtn.active {
+  color: var(--gold-soft);
+  background: rgba(212, 168, 83, 0.12);
+}
+.reactionBtn.grow {
+  margin-left: auto;
+}
+.commentsBox {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+}
+.commentLine {
+  font-size: 12px;
+  color: var(--text-mid);
+  margin-bottom: 6px;
+}
+.commentLine b {
+  color: var(--text-hi);
+  font-weight: 600;
+}
+.commentInputRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.commentInputRow input {
+  flex: 1;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--text-hi);
+}
+.commentInputRow button {
+  color: var(--violet-soft);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 4px;
+}

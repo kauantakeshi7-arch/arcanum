@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../../context/SessionContext';
 import { useAgoraData } from '../../context/AgoraDataContext';
+import { useCovensData } from '../../context/CovensDataContext';
 import { useModal } from '../../components/modal/ModalProvider';
 import { OnboardingCard } from './OnboardingCard';
 import { CovensTeaser } from './CovensTeaser';
 import { PostCard } from './PostCard';
 import { NewPostModal } from './NewPostModal';
 import { FindPeopleModal } from './FindPeopleModal';
+import { CovenWallModal } from '../covens/CovenWallModal';
 import type { FeedTab } from '../../types/agora';
 import styles from './AgoraScreen.module.css';
 
@@ -19,6 +21,7 @@ const TABS: [FeedTab, string][] = [
 // Porte de index.html:2100-2124 (renderAgora/renderAgoraEmptyState).
 export function AgoraScreen() {
   const { posts, feedTab, setFeedTab, followingIds, loading, addLocalPost } = useAgoraData();
+  const { covens } = useCovensData();
   const { profile } = useSession();
   const navigate = useNavigate();
   const { push, pop } = useModal();
@@ -31,6 +34,19 @@ export function AgoraScreen() {
     push(<FindPeopleModal />);
   }
 
+  function openCovensTeaser(covenId?: string) {
+    if (!covenId) {
+      navigate('/covens');
+      return;
+    }
+    const coven = covens.find((c) => c.id === covenId);
+    if (!coven?.joined) {
+      navigate('/covens');
+      return;
+    }
+    push(<CovenWallModal covenId={covenId} />);
+  }
+
   const filtered = posts.filter((p) => {
     if (feedTab === 'minha-senda') return p.trad === profile?.religion_path;
     if (feedTab === 'seguindo') return followingIds.has(p.userId);
@@ -41,7 +57,7 @@ export function AgoraScreen() {
     <div>
       <div className={styles.screen}>
         <OnboardingCard onGoToCovens={() => navigate('/covens')} onOpenFindPeople={openFindPeople} onOpenNewPost={openNewPost} />
-        <CovensTeaser onOpen={() => navigate('/covens')} />
+        <CovensTeaser onOpen={openCovensTeaser} />
 
         <div className={styles.feedTabs}>
           {TABS.map(([id, label]) => (

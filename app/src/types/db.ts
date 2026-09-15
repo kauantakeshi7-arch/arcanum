@@ -38,7 +38,7 @@ export interface Coven {
   slug: string;
   tradition: string;
   description: string | null;
-  privacy: 'public' | 'private';
+  privacy: 'public' | 'approval' | 'secret';
   created_by: string;
   pinned_announcement: string | null;
   created_at: string;
@@ -46,7 +46,36 @@ export interface Coven {
 
 export interface CovenWithCounts extends Coven {
   member_count: number;
-  post_count: number;
+}
+
+export interface CovenPostRow {
+  id: string;
+  coven_id: string;
+  user_id: string;
+  content: string;
+  media_url: string | null;
+  created_at: string;
+  author_name: string | null;
+  likes_count: number;
+  comments_count: number;
+}
+
+export interface CovenPostCommentRow {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  author_name: string | null;
+}
+
+export interface CovenMemberRow {
+  coven_id: string;
+  user_id: string;
+  role: 'member' | 'moderator' | 'founder';
+  joined_at: string;
+  display_name: string;
+  is_verified: boolean;
 }
 
 export interface NotificationRow {

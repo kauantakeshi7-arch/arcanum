@@ -380,7 +380,7 @@ export interface CreateCovenParams {
   name: string;
   tradition: string;
   description?: string | null;
-  privacy?: 'public' | 'private';
+  privacy?: 'public' | 'approval' | 'secret';
   createdBy: string;
 }
 

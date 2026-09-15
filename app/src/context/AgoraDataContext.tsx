@@ -2,14 +2,13 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import * as api from '../lib/api';
 import { relativeTime } from '../lib/constants';
 import { useSession } from './SessionContext';
-import type { CovenTeaserItem, FeedTab, PostViewModel, StoryGroup } from '../types/agora';
+import type { FeedTab, PostViewModel, StoryGroup } from '../types/agora';
 
 interface AgoraDataContextValue {
   loading: boolean;
   posts: PostViewModel[];
   storiesByUser: StoryGroup[];
   storyViewIds: Set<string>;
-  covens: CovenTeaserItem[];
   followingIds: Set<string>;
   feedTab: FeedTab;
   onboardingDismissed: boolean;
@@ -37,7 +36,6 @@ export function AgoraDataProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<PostViewModel[]>([]);
   const [storiesByUser, setStoriesByUser] = useState<StoryGroup[]>([]);
   const [storyViewIds, setStoryViewIds] = useState<Set<string>>(new Set());
-  const [covens, setCovens] = useState<CovenTeaserItem[]>([]);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [feedTab, setFeedTab] = useState<FeedTab>('para-voce');
   const [onboardingDismissed, setOnboardingDismissed] = useState(
@@ -50,17 +48,14 @@ export function AgoraDataProvider({ children }: { children: ReactNode }) {
 
     async function load() {
       setLoading(true);
-      const [postRows, myLikes, covenRows, myCovenIds, following, blocked, storyRows, myStoryViews] =
-        await Promise.all([
-          api.fetchPosts(),
-          api.fetchMyLikedPostIds(userId!),
-          api.fetchCovens(),
-          api.fetchMyCovenIds(userId!),
-          api.fetchFollowingIds(userId!),
-          api.fetchBlockedIds(userId!),
-          api.fetchActiveStories(),
-          api.fetchMyStoryViewIds(userId!),
-        ]);
+      const [postRows, myLikes, following, blocked, storyRows, myStoryViews] = await Promise.all([
+        api.fetchPosts(),
+        api.fetchMyLikedPostIds(userId!),
+        api.fetchFollowingIds(userId!),
+        api.fetchBlockedIds(userId!),
+        api.fetchActiveStories(),
+        api.fetchMyStoryViewIds(userId!),
+      ]);
       if (!active) return;
 
       setPosts(
@@ -86,15 +81,6 @@ export function AgoraDataProvider({ children }: { children: ReactNode }) {
             commentsLoaded: false,
             showComments: false,
           })),
-      );
-
-      setCovens(
-        covenRows.map((row) => ({
-          id: row.id,
-          name: row.name,
-          tradition: row.tradition,
-          joined: myCovenIds.has(row.id),
-        })),
       );
 
       setFollowingIds(following);
@@ -266,7 +252,6 @@ export function AgoraDataProvider({ children }: { children: ReactNode }) {
         posts,
         storiesByUser,
         storyViewIds,
-        covens,
         followingIds,
         feedTab,
         onboardingDismissed,

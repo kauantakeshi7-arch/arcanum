@@ -1,10 +1,10 @@
 import { GLYPH, tradColor } from '../../lib/constants';
-import { useAgoraData } from '../../context/AgoraDataContext';
+import { useCovensData } from '../../context/CovensDataContext';
 import styles from './AgoraScreen.module.css';
 
 // Porte de index.html:2023-2044 (renderCovensTeaser).
 export function CovensTeaser({ onOpen }: { onOpen: (covenId?: string) => void }) {
-  const { covens } = useAgoraData();
+  const { covens } = useCovensData();
   const joined = covens.filter((c) => c.joined);
   const visible = joined.slice(0, 4);
   const extra = joined.length - visible.length;
