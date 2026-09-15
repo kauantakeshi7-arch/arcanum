@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { tradColor } from '../../lib/constants';
 import { familiarStage, gradeOf, robeColorForGrade, shopItem, type ShopCategory } from './perfilData';
 import type { Profile } from '../../types/db';
@@ -64,7 +65,17 @@ export function AvatarSVG({ profile }: { profile: Profile }) {
         <path d="M74 55 a26 26 0 0152 0 q0 -22 -26 -24 q-26 2 -26 24z" fill={robe} />
         <circle cx="91" cy="63" r="2" fill="#2a2333" />
         <circle cx="109" cy="63" r="2" fill="#2a2333" />
-        {familiar}
+        {/* Pop de escala quando o Familiar Astral evolui de estágio (mana_xp
+            cruza um limiar) — key muda, o grupo remonta e anima a entrada. */}
+        <motion.g
+          key={stage}
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+          style={{ transformOrigin: '100px 118px' }}
+        >
+          {familiar}
+        </motion.g>
       </svg>
     </>
   );

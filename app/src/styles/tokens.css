@@ -413,6 +413,7 @@ button {
   border-radius: 50%;
   filter: blur(18px);
   opacity: 0.55;
+  transition: background var(--duration-slow) var(--ease-out);
 }
 @media (prefers-reduced-motion: no-preference) {
   .aura-glow {
@@ -436,6 +437,17 @@ button {
   width: 130px;
   height: 130px;
   filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4));
+}
+/* Troca de equipamento na loja (Fase 3): as cores de robe/aura mudam via
+   atributo fill/stroke do React — CSS transition anima a troca em vez de
+   trocar instantaneamente. */
+.avatar-svg path,
+.avatar-svg circle,
+.avatar-svg stop {
+  transition:
+    fill var(--duration-slow) var(--ease-out),
+    stroke var(--duration-slow) var(--ease-out),
+    stop-color var(--duration-slow) var(--ease-out);
 }
 .profile-name {
   font-family: var(--font-display);
@@ -478,16 +490,49 @@ button {
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 14px 10px;
+  position: relative;
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out);
+}
+@media (hover: hover) {
+  .shop-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
 }
 .shop-item.equipped {
   border-color: rgba(212, 168, 83, 0.4);
   box-shadow: 0 0 0 1px rgba(212, 168, 83, 0.15) inset;
+}
+.shop-item.equipped::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold-soft);
+  color: #22160a;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .shop-swatch {
   width: 36px;
   height: 36px;
   border-radius: 50%;
   box-shadow: 0 0 14px rgba(0, 0, 0, 0.3);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+@media (hover: hover) {
+  .shop-item:hover .shop-swatch {
+    transform: scale(1.08);
+  }
 }
 .shop-swatch-glyph {
   display: flex;
@@ -586,6 +631,7 @@ button {
   background: linear-gradient(90deg, var(--violet), var(--emerald));
   box-shadow: 0 0 10px rgba(139, 108, 242, 0.4);
   overflow: hidden;
+  transition: width var(--duration-slow) var(--ease-out);
 }
 @media (prefers-reduced-motion: no-preference) {
   .mana-bar-fill::after {

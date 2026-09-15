@@ -3,6 +3,7 @@ import { initials, tradColor } from '../../lib/constants';
 import { useSession } from '../../context/SessionContext';
 import { useAgoraData } from '../../context/AgoraDataContext';
 import { useModal } from '../../components/modal/ModalProvider';
+import { Skeleton } from '../../components/Skeleton';
 import { StoryViewer } from './StoryViewer';
 import { NewStoryModal } from './NewStoryModal';
 import type { StoryGroup } from '../../types/agora';
@@ -23,9 +24,21 @@ function storyViewerOrder(storiesByUser: StoryGroup[], myUserId: string | undefi
 // Porte de index.html:1726-1753 (renderStories).
 export function Stories() {
   const { session, profile } = useSession();
-  const { storiesByUser, storyViewIds } = useAgoraData();
+  const { storiesByUser, storyViewIds, loading } = useAgoraData();
   const { push, pop } = useModal();
   const [viewer, setViewer] = useState<{ order: StoryGroup[]; startIndex: number } | null>(null);
+
+  if (loading) {
+    return (
+      <div className={styles.stories} aria-hidden="true">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div className={styles.story} key={i}>
+            <Skeleton width={56} height={56} radius="50%" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   const myGroup = storiesByUser.find((g) => g.userId === session?.user.id);
   const others = storiesByUser

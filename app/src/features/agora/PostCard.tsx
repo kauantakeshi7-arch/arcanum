@@ -109,9 +109,18 @@ export function PostCard({ post }: { post: PostViewModel }) {
           </svg>
         </button>
         <button className={`${styles.reactionBtn} ${styles.grow}`} onClick={() => toggleComments(post.id)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <motion.svg
+            key={post.comments.length}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            initial={{ scale: 1.3 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 14 }}
+          >
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-          </svg>
+          </motion.svg>
           <span>{post.comments.length}</span>
         </button>
       </div>
