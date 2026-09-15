@@ -161,6 +161,13 @@
   justify-content: center;
   color: var(--text-mid);
 }
+/* Área de toque de 44px (WCAG 2.5.5) sem alterar o tamanho visual do botão
+   — expande a zona clicável via pseudo-elemento em vez de inchar o ícone. */
+.iconBtn::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
 .iconBtn:hover {
   background: rgba(212, 168, 83, 0.08);
   color: var(--gold-soft);

@@ -45,7 +45,14 @@ export function SacredMap() {
     const markers: L.Marker[] = [];
     sacredPlaces.forEach((place) => {
       const info = SACRED_CATEGORIES[place.category] || { glyph: '✦', label: place.category };
-      const marker = L.marker([place.latitude, place.longitude])
+      const icon = L.divIcon({
+        className: styles.markerIcon,
+        html: `<div class="${styles.markerBadge}">${info.glyph}</div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 34],
+        popupAnchor: [0, -32],
+      });
+      const marker = L.marker([place.latitude, place.longitude], { icon })
         .addTo(map)
         .bindPopup(
           `<b>${info.glyph} ${escapeHtml(place.name)}</b><br>${escapeHtml(place.address)}, ${escapeHtml(place.city)}${place.phone ? '<br>' + escapeHtml(place.phone) : ''}`,
