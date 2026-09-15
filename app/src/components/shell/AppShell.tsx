@@ -2,18 +2,21 @@ import { Outlet } from 'react-router-dom';
 import { SideNav } from './SideNav';
 import { BottomNav } from './BottomNav';
 import { RightPanel } from './RightPanel';
+import { InstallBanner } from './InstallBanner';
 import { Stories } from '../../features/agora/Stories';
 import { DmListModal } from '../../features/dm/DmListModal';
+import { GlobalSearchModal } from '../../features/search/GlobalSearchModal';
 import { useDmData } from '../../context/DmDataContext';
+import { useStealth } from '../../context/StealthContext';
 import { useModal } from '../modal/ModalProvider';
 import styles from './AppShell.module.css';
 
-// Busca ainda fica clicável mas sem ação real — ganha comportamento no
-// Milestone E (busca global). O sino de notificações abre um modal de
-// demonstração; a lista de notificações em si também fica para depois.
+// O sino de notificações abre um modal de demonstração; a lista de
+// notificações em si fica para uma fase futura.
 export function AppShell() {
   const { push } = useModal();
   const { unreadCount } = useDmData();
+  const { handleBrandTap } = useStealth();
 
   function openNotificationsDemo() {
     push(
@@ -34,7 +37,7 @@ export function AppShell() {
       <SideNav />
       <div className={styles.mainCol}>
         <div className={styles.topbar}>
-          <div className={styles.brand}>
+          <div className={styles.brand} onClick={handleBrandTap}>
             <span className={styles.brandMark}>
               <svg viewBox="0 0 24 24" fill="none" stroke="url(#gradTopbar)" strokeWidth="1.1">
                 <defs>
@@ -50,7 +53,7 @@ export function AppShell() {
             <span className={styles.brandName}>Arcanum</span>
           </div>
           <div className={styles.topbarActions}>
-            <button className={styles.iconBtn} aria-label="Buscar">
+            <button className={styles.iconBtn} aria-label="Buscar" onClick={() => push(<GlobalSearchModal />)}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
@@ -71,6 +74,7 @@ export function AppShell() {
           </div>
         </div>
 
+        <InstallBanner />
         <Stories />
 
         <div className={styles.screens}>

@@ -16,6 +16,9 @@ export interface Profile {
   ascendant_sign: string | null;
   is_verified: boolean;
   referred_by: string | null;
+  stealth_pin: string | null;
+  avatar_layers: { aura: string; robe: string; item: string } | null;
+  unlocked_items: string[] | null;
   created_at: string;
 }
 

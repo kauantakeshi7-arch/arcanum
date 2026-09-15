@@ -6,30 +6,33 @@ import { SessionProvider } from '../../context/SessionContext';
 import { AgoraDataProvider } from '../../context/AgoraDataContext';
 import { DmDataProvider } from '../../context/DmDataContext';
 import { ModalProvider } from '../modal/ModalProvider';
+import { ToastProvider } from '../toast/ToastProvider';
 
-// AppShell renderiza <Stories /> (usa useSession/useAgoraData) e o sino de
-// notificações (usa useModal) — sem sessão, os dados da Ágora ficam vazios e
-// nenhuma chamada de rede é feita (ver AgoraDataContext: só busca com userId).
-// ModalProvider fica por dentro dos provedores de dados — mesma ordem de
-// App.tsx — porque o conteúdo de um modal só enxerga contexto de quem o
-// envolve, não de quem chamou push().
+// AppShell renderiza <Stories /> (usa useSession/useAgoraData), o sino de
+// notificações (usa useModal) e o InstallBanner (usa useToast) — sem sessão,
+// os dados da Ágora ficam vazios e nenhuma chamada de rede é feita (ver
+// AgoraDataContext: só busca com userId). ModalProvider fica por dentro dos
+// provedores de dados — mesma ordem de App.tsx — porque o conteúdo de um
+// modal só enxerga contexto de quem o envolve, não de quem chamou push().
 function renderShell(initialPath = '/') {
   return render(
     <SessionProvider>
-      <AgoraDataProvider>
-        <DmDataProvider>
-          <ModalProvider>
-            <MemoryRouter initialEntries={[initialPath]}>
-              <Routes>
-                <Route path="/" element={<AppShell />}>
-                  <Route index element={<div>Conteúdo da Ágora</div>} />
-                  <Route path="covens" element={<div>Conteúdo de Covens</div>} />
-                </Route>
-              </Routes>
-            </MemoryRouter>
-          </ModalProvider>
-        </DmDataProvider>
-      </AgoraDataProvider>
+      <ToastProvider>
+        <AgoraDataProvider>
+          <DmDataProvider>
+            <ModalProvider>
+              <MemoryRouter initialEntries={[initialPath]}>
+                <Routes>
+                  <Route path="/" element={<AppShell />}>
+                    <Route index element={<div>Conteúdo da Ágora</div>} />
+                    <Route path="covens" element={<div>Conteúdo de Covens</div>} />
+                  </Route>
+                </Routes>
+              </MemoryRouter>
+            </ModalProvider>
+          </DmDataProvider>
+        </AgoraDataProvider>
+      </ToastProvider>
     </SessionProvider>,
   );
 }

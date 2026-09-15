@@ -28,6 +28,10 @@ export const TRADITIONS: Record<string, { label: string; color: string }> = {
   solitario: { label: 'Buscador Solitário', color: '#8B87A0' },
 };
 
+// Porte literal de index.html:1527-1528.
+export const GRADES = ['', 'Buscador', 'Aprendiz', 'Iniciado', 'Adepto', 'Mestre', 'Arconte', 'Hierofante'];
+export const FAMILIAR_STAGES = ['Ovo Cósmico', 'Filhote Astral', 'Guardião Astral', 'Entidade Mítica'];
+
 export function tradColor(t: string): string {
   return (TRADITIONS[t] || TRADITIONS.solitario).color;
 }

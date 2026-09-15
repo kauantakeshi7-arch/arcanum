@@ -6,6 +6,7 @@ import { TrilhasDataProvider } from './context/TrilhasDataContext';
 import { SantuarioDataProvider } from './context/SantuarioDataContext';
 import { EgregoraDataProvider } from './context/EgregoraDataContext';
 import { DmDataProvider } from './context/DmDataContext';
+import { StealthProvider } from './context/StealthContext';
 import { ModalProvider } from './components/modal/ModalProvider';
 import { ToastProvider } from './components/toast/ToastProvider';
 import { AuthScreen } from './features/auth/AuthScreen';
@@ -15,7 +16,7 @@ import { CovensScreen } from './features/covens/CovensScreen';
 import { TrilhasScreen } from './features/trilhas/TrilhasScreen';
 import { SantuarioScreen } from './features/santuario/SantuarioScreen';
 import { EgregoraScreen } from './features/egregora/EgregoraScreen';
-import { ComingSoon } from './routes/ComingSoon';
+import { PerfilScreen } from './features/perfil/PerfilScreen';
 
 function Gate() {
   const { session, loading } = useSession();
@@ -27,32 +28,34 @@ function Gate() {
   // ModalProvider, então ele só enxerga contexto de provedores que o
   // envolvem — não os que envolvem quem chamou push().
   return (
-    <CovensDataProvider>
-      <AgoraDataProvider>
-        <TrilhasDataProvider>
-          <SantuarioDataProvider>
-            <EgregoraDataProvider>
-              <DmDataProvider>
-                <ModalProvider>
-                  <BrowserRouter>
-                    <Routes>
-                      <Route path="/" element={<AppShell />}>
-                        <Route index element={<AgoraScreen />} />
-                        <Route path="covens" element={<CovensScreen />} />
-                        <Route path="trilhas" element={<TrilhasScreen />} />
-                        <Route path="altar" element={<SantuarioScreen />} />
-                        <Route path="egregora" element={<EgregoraScreen />} />
-                        <Route path="perfil" element={<ComingSoon title="Perfil" />} />
-                      </Route>
-                    </Routes>
-                  </BrowserRouter>
-                </ModalProvider>
-              </DmDataProvider>
-            </EgregoraDataProvider>
-          </SantuarioDataProvider>
-        </TrilhasDataProvider>
-      </AgoraDataProvider>
-    </CovensDataProvider>
+    <StealthProvider>
+      <CovensDataProvider>
+        <AgoraDataProvider>
+          <TrilhasDataProvider>
+            <SantuarioDataProvider>
+              <EgregoraDataProvider>
+                <DmDataProvider>
+                  <ModalProvider>
+                    <BrowserRouter>
+                      <Routes>
+                        <Route path="/" element={<AppShell />}>
+                          <Route index element={<AgoraScreen />} />
+                          <Route path="covens" element={<CovensScreen />} />
+                          <Route path="trilhas" element={<TrilhasScreen />} />
+                          <Route path="altar" element={<SantuarioScreen />} />
+                          <Route path="egregora" element={<EgregoraScreen />} />
+                          <Route path="perfil" element={<PerfilScreen />} />
+                        </Route>
+                      </Routes>
+                    </BrowserRouter>
+                  </ModalProvider>
+                </DmDataProvider>
+              </EgregoraDataProvider>
+            </SantuarioDataProvider>
+          </TrilhasDataProvider>
+        </AgoraDataProvider>
+      </CovensDataProvider>
+    </StealthProvider>
   );
 }
 

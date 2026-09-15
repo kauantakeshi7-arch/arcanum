@@ -10,9 +10,12 @@ interface AgoraDataContextValue {
   storiesByUser: StoryGroup[];
   storyViewIds: Set<string>;
   followingIds: Set<string>;
+  blockedIds: Set<string>;
   feedTab: FeedTab;
   onboardingDismissed: boolean;
   setFeedTab: (tab: FeedTab) => void;
+  toggleFollow: (targetId: string) => Promise<void>;
+  toggleBlock: (targetId: string) => Promise<void>;
   toggleLike: (postId: string) => Promise<void>;
   toggleRepost: (postId: string) => void;
   toggleSave: (postId: string) => void;
@@ -37,6 +40,7 @@ export function AgoraDataProvider({ children }: { children: ReactNode }) {
   const [storiesByUser, setStoriesByUser] = useState<StoryGroup[]>([]);
   const [storyViewIds, setStoryViewIds] = useState<Set<string>>(new Set());
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
   const [feedTab, setFeedTab] = useState<FeedTab>('para-voce');
   const [onboardingDismissed, setOnboardingDismissed] = useState(
     () => !!localStorage.getItem(ONBOARDING_KEY),
@@ -84,6 +88,7 @@ export function AgoraDataProvider({ children }: { children: ReactNode }) {
       );
 
       setFollowingIds(following);
+      setBlockedIds(blocked);
 
       const storyGroups = new Map<string, StoryGroup>();
       (storyRows as unknown as Array<{
@@ -223,6 +228,65 @@ export function AgoraDataProvider({ children }: { children: ReactNode }) {
     [userId, profile, posts],
   );
 
+  // Porte de index.html:3537-3556 (follow-user) — otimista com rollback.
+  const toggleFollow = useCallback(
+    async (targetId: string) => {
+      if (!userId) return;
+      const wasFollowing = followingIds.has(targetId);
+      setFollowingIds((prev) => {
+        const next = new Set(prev);
+        if (wasFollowing) next.delete(targetId);
+        else next.add(targetId);
+        return next;
+      });
+      try {
+        if (wasFollowing) {
+          await api.unfollowUser(userId, targetId);
+        } else {
+          await api.followUser(userId, targetId);
+          api.createNotification(targetId, userId, 'follow', null).catch(console.error);
+        }
+      } catch (err) {
+        console.error(err);
+        setFollowingIds((prev) => {
+          const next = new Set(prev);
+          if (wasFollowing) next.add(targetId);
+          else next.delete(targetId);
+          return next;
+        });
+        throw err;
+      }
+    },
+    [userId, followingIds],
+  );
+
+  // Porte de index.html:4118-4145 (confirmBlockUser) — bloquear desfaz o
+  // seguir dos dois lados e some com os posts da pessoa no feed já carregado.
+  const toggleBlock = useCallback(
+    async (targetId: string) => {
+      if (!userId) return;
+      const wasBlocked = blockedIds.has(targetId);
+      if (wasBlocked) {
+        await api.unblockUser(userId, targetId);
+        setBlockedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(targetId);
+          return next;
+        });
+      } else {
+        await api.blockUser(userId, targetId);
+        setBlockedIds((prev) => new Set(prev).add(targetId));
+        setFollowingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(targetId);
+          return next;
+        });
+        setPosts((prev) => prev.filter((p) => p.userId !== targetId));
+      }
+    },
+    [userId, blockedIds],
+  );
+
   const dismissOnboarding = useCallback(() => {
     localStorage.setItem(ONBOARDING_KEY, '1');
     setOnboardingDismissed(true);
@@ -253,9 +317,12 @@ export function AgoraDataProvider({ children }: { children: ReactNode }) {
         storiesByUser,
         storyViewIds,
         followingIds,
+        blockedIds,
         feedTab,
         onboardingDismissed,
         setFeedTab,
+        toggleFollow,
+        toggleBlock,
         toggleLike,
         toggleRepost,
         toggleSave,
