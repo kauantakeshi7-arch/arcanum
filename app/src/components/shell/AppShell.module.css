@@ -49,6 +49,9 @@
   font-weight: 500;
   text-align: left;
   width: 100%;
+  transition:
+    color var(--duration-base) var(--ease-out),
+    background var(--duration-base) var(--ease-out);
 }
 .sideNavBtn svg {
   width: 21px;
@@ -233,10 +236,12 @@
   color: var(--text-low);
   position: relative;
   padding: 4px 10px;
+  transition: color var(--duration-base) var(--ease-out);
 }
 .navBtn svg {
   width: 21px;
   height: 21px;
+  transition: transform var(--duration-base) var(--ease-out);
 }
 .navBtn span {
   font-size: 9.5px;
@@ -245,16 +250,30 @@
 .navBtnActive {
   color: var(--gold-soft);
 }
+.navBtnActive svg {
+  transform: translateY(-1px) scale(1.06);
+}
 .navBtnActive::before {
   content: '';
   position: absolute;
   top: -9px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(1);
   width: 4px;
   height: 4px;
   border-radius: 50%;
   background: var(--gold-soft);
+  animation: nav-dot-in var(--duration-base) var(--ease-out);
+}
+@keyframes nav-dot-in {
+  from {
+    transform: translateX(-50%) scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
 }
 
 .placeholder {

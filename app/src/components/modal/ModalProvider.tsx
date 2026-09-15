@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import styles from './Modal.module.css';
 
 interface ModalEntry {
@@ -53,13 +54,30 @@ export function ModalProvider({ children }: { children: ReactNode }) {
   return (
     <ModalContext.Provider value={{ push, pop }}>
       {children}
-      {stack.map((m) => (
-        <div key={m.id} className={styles.overlay} onClick={() => pop(m.id)}>
-          <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
-            {m.content}
-          </div>
-        </div>
-      ))}
+      <AnimatePresence>
+        {stack.map((m) => (
+          <motion.div
+            key={m.id}
+            className={styles.overlay}
+            onClick={() => pop(m.id)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+          >
+            <motion.div
+              className={styles.sheet}
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 24 }}
+              transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {m.content}
+            </motion.div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </ModalContext.Provider>
   );
 }

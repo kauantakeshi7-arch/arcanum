@@ -29,6 +29,20 @@
   justify-content: center;
   box-shadow: 0 0 14px -2px rgba(212, 168, 83, 0.35);
 }
+@media (prefers-reduced-motion: no-preference) {
+  .storyRing:not(.seen) {
+    animation: story-ring-pulse 2.6s ease-in-out infinite;
+  }
+}
+@keyframes story-ring-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 14px -2px rgba(212, 168, 83, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 18px 1px rgba(212, 168, 83, 0.55);
+  }
+}
 .storyAddBadge {
   position: absolute;
   bottom: -2px;

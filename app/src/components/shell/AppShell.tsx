@@ -1,8 +1,10 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { SideNav } from './SideNav';
 import { BottomNav } from './BottomNav';
 import { RightPanel } from './RightPanel';
 import { InstallBanner } from './InstallBanner';
+import { PageTransition } from '../PageTransition';
 import { Stories } from '../../features/agora/Stories';
 import { DmListModal } from '../../features/dm/DmListModal';
 import { GlobalSearchModal } from '../../features/search/GlobalSearchModal';
@@ -17,6 +19,7 @@ export function AppShell() {
   const { push } = useModal();
   const { unreadCount } = useDmData();
   const { handleBrandTap } = useStealth();
+  const location = useLocation();
 
   function openNotificationsDemo() {
     push(
@@ -78,7 +81,11 @@ export function AppShell() {
         <Stories />
 
         <div className={styles.screens}>
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <PageTransition key={location.pathname}>
+              <Outlet />
+            </PageTransition>
+          </AnimatePresence>
           <button className={styles.fab} aria-label="Nova publicação" title="Nova publicação">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 5v14M5 12h14" />

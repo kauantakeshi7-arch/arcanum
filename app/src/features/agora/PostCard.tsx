@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { GLYPH, initials, tradColor, tradLabel } from '../../lib/constants';
 import { useAgoraData } from '../../context/AgoraDataContext';
 import type { PostViewModel } from '../../types/agora';
@@ -76,9 +77,18 @@ export function PostCard({ post }: { post: PostViewModel }) {
           className={`${styles.reactionBtn} ${post.liked ? styles.active : ''}`}
           onClick={() => toggleLike(post.id)}
         >
-          <svg viewBox="0 0 24 24" fill={post.liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.6">
+          <motion.svg
+            key={post.liked ? 'liked' : 'unliked'}
+            viewBox="0 0 24 24"
+            fill={post.liked ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            strokeWidth="1.6"
+            initial={{ scale: post.liked ? 0.5 : 1 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 14 }}
+          >
             <path d="M12 3l2.2 4.8 5.3.6-4 3.6 1.1 5.2L12 14.8 7.4 17.2l1.1-5.2-4-3.6 5.3-.6z" />
-          </svg>
+          </motion.svg>
           <span>{post.blessings} Axé</span>
         </button>
         <button
