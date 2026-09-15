@@ -1,7 +1,15 @@
 # Arcanum
 
 Rede social e ecossistema místico gamificado — PWA mobile-first, responsivo para desktop.
-Frontend estático (HTML/CSS/JS puro, sem build step) + backend em **Supabase** (Postgres + Auth).
+Backend em **Supabase** (Postgres + Auth), compartilhado pelas duas versões do frontend abaixo.
+
+> ⚠️ **Este `index.html`/`js/` na raiz NÃO está mais em produção.** Ele foi
+> substituído pela reescrita em React + Vite + TypeScript que vive em
+> [`app/`](./app) (`arcanum-mu.vercel.app` já serve o app novo). Este
+> diretório continua no repositório apenas como referência histórica e rede
+> de segurança para rollback — veja [`app/README.md`](./app/README.md) para
+> a documentação da versão atual. O conteúdo abaixo descreve especificamente
+> este `index.html` legado, não o app em produção.
 
 ---
 
