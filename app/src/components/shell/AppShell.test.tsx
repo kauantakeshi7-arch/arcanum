@@ -4,6 +4,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AppShell } from './AppShell';
 import { SessionProvider } from '../../context/SessionContext';
 import { AgoraDataProvider } from '../../context/AgoraDataContext';
+import { DmDataProvider } from '../../context/DmDataContext';
 import { ModalProvider } from '../modal/ModalProvider';
 
 // AppShell renderiza <Stories /> (usa useSession/useAgoraData) e o sino de
@@ -16,16 +17,18 @@ function renderShell(initialPath = '/') {
   return render(
     <SessionProvider>
       <AgoraDataProvider>
-        <ModalProvider>
-          <MemoryRouter initialEntries={[initialPath]}>
-            <Routes>
-              <Route path="/" element={<AppShell />}>
-                <Route index element={<div>Conteúdo da Ágora</div>} />
-                <Route path="covens" element={<div>Conteúdo de Covens</div>} />
-              </Route>
-            </Routes>
-          </MemoryRouter>
-        </ModalProvider>
+        <DmDataProvider>
+          <ModalProvider>
+            <MemoryRouter initialEntries={[initialPath]}>
+              <Routes>
+                <Route path="/" element={<AppShell />}>
+                  <Route index element={<div>Conteúdo da Ágora</div>} />
+                  <Route path="covens" element={<div>Conteúdo de Covens</div>} />
+                </Route>
+              </Routes>
+            </MemoryRouter>
+          </ModalProvider>
+        </DmDataProvider>
       </AgoraDataProvider>
     </SessionProvider>,
   );

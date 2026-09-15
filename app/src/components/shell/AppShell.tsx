@@ -3,14 +3,17 @@ import { SideNav } from './SideNav';
 import { BottomNav } from './BottomNav';
 import { RightPanel } from './RightPanel';
 import { Stories } from '../../features/agora/Stories';
+import { DmListModal } from '../../features/dm/DmListModal';
+import { useDmData } from '../../context/DmDataContext';
 import { useModal } from '../modal/ModalProvider';
 import styles from './AppShell.module.css';
 
-// Busca e DM ficam clicáveis mas sem ação real na Fase 1 — ganham
-// comportamento junto com Milestone A/E. O sino de notificações já abre um
-// modal de demonstração só para provar o ModalProvider ponta a ponta.
+// Busca ainda fica clicável mas sem ação real — ganha comportamento no
+// Milestone E (busca global). O sino de notificações abre um modal de
+// demonstração; a lista de notificações em si também fica para depois.
 export function AppShell() {
   const { push } = useModal();
+  const { unreadCount } = useDmData();
 
   function openNotificationsDemo() {
     push(
@@ -59,10 +62,11 @@ export function AppShell() {
                 <path d="M13.7 21a2 2 0 01-3.4 0" />
               </svg>
             </button>
-            <button className={styles.iconBtn} aria-label="Abrir mensagens diretas">
+            <button className={styles.iconBtn} aria-label="Abrir mensagens diretas" onClick={() => push(<DmListModal />)}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
               </svg>
+              {unreadCount > 0 && <span className={styles.badgeDot}>{unreadCount > 9 ? '9+' : unreadCount}</span>}
             </button>
           </div>
         </div>

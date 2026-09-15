@@ -5,6 +5,7 @@ import { CovensDataProvider } from './context/CovensDataContext';
 import { TrilhasDataProvider } from './context/TrilhasDataContext';
 import { SantuarioDataProvider } from './context/SantuarioDataContext';
 import { EgregoraDataProvider } from './context/EgregoraDataContext';
+import { DmDataProvider } from './context/DmDataContext';
 import { ModalProvider } from './components/modal/ModalProvider';
 import { ToastProvider } from './components/toast/ToastProvider';
 import { AuthScreen } from './features/auth/AuthScreen';
@@ -31,20 +32,22 @@ function Gate() {
         <TrilhasDataProvider>
           <SantuarioDataProvider>
             <EgregoraDataProvider>
-              <ModalProvider>
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={<AppShell />}>
-                      <Route index element={<AgoraScreen />} />
-                      <Route path="covens" element={<CovensScreen />} />
-                      <Route path="trilhas" element={<TrilhasScreen />} />
-                      <Route path="altar" element={<SantuarioScreen />} />
-                      <Route path="egregora" element={<EgregoraScreen />} />
-                      <Route path="perfil" element={<ComingSoon title="Perfil" />} />
-                    </Route>
-                  </Routes>
-                </BrowserRouter>
-              </ModalProvider>
+              <DmDataProvider>
+                <ModalProvider>
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/" element={<AppShell />}>
+                        <Route index element={<AgoraScreen />} />
+                        <Route path="covens" element={<CovensScreen />} />
+                        <Route path="trilhas" element={<TrilhasScreen />} />
+                        <Route path="altar" element={<SantuarioScreen />} />
+                        <Route path="egregora" element={<EgregoraScreen />} />
+                        <Route path="perfil" element={<ComingSoon title="Perfil" />} />
+                      </Route>
+                    </Routes>
+                  </BrowserRouter>
+                </ModalProvider>
+              </DmDataProvider>
             </EgregoraDataProvider>
           </SantuarioDataProvider>
         </TrilhasDataProvider>

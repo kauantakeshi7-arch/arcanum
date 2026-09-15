@@ -204,3 +204,26 @@ textarea:focus-visible {
   color: var(--text-low);
   margin-top: 2px;
 }
+
+/* Barra de "escrever e enviar", reaproveitada por comentários de post,
+   comentários de coven e threads de DM (portado de index.html:383-388) */
+.comment-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.comment-input-row input {
+  flex: 1;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--text-hi);
+}
+.comment-input-row button {
+  color: var(--violet-soft);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 4px;
+}
