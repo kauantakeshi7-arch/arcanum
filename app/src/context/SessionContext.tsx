@@ -18,11 +18,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadProfile(userId: string) {
+  // onAuthStateChange pode disparar antes de ensureProfile() (chamado por
+  // signIn/signUp em lib/auth.ts) terminar de inserir a linha em profiles —
+  // sem essa corrida, um retry aqui seria desnecessário. Uma tentativa extra
+  // depois de uma pequena espera cobre essa janela sem mascarar erros reais.
+  async function loadProfile(userId: string, attempt = 0) {
     try {
       const p = await getProfile(userId);
       setProfile(p);
     } catch (err) {
+      if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        return loadProfile(userId, attempt + 1);
+      }
       console.error('Falha ao carregar profile:', err);
       setProfile(null);
     }

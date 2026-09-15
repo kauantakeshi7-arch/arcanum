@@ -119,3 +119,63 @@ textarea:focus-visible {
   font-size: 13.5px;
   color: var(--text-hi);
 }
+
+/* Primitivos de modal e listas, reaproveitados por várias telas (portados de
+   index.html:984, 1009, 393-401, 326-331) */
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  padding-right: 24px;
+}
+.empty-hint {
+  font-size: 12px;
+  color: var(--text-low);
+  text-align: center;
+  padding: 20px 0;
+}
+.avatar-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--void);
+}
+.post-head-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.dm-convo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 4px;
+  border-radius: 12px;
+  transition: background 0.15s;
+}
+.dm-convo-info {
+  flex: 1;
+  min-width: 0;
+}
+.dm-convo-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-hi);
+}

@@ -27,7 +27,7 @@ export interface Post {
 }
 
 export interface PostWithCounts extends Post {
-  likes_count: number;
+  blessings_count: number;
   comments_count: number;
   profiles: Pick<Profile, 'display_name' | 'religion_path' | 'is_verified'>;
 }

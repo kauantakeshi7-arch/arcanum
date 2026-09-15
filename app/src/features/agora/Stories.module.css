@@ -1,0 +1,222 @@
+/* Portado de index.html:215-278 (.stories, .story-*, .story-viewer-*) */
+.stories {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+}
+.story {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  width: 60px;
+  background: none;
+  border: none;
+}
+.storyRing {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  position: relative;
+  padding: 2.5px;
+  background: conic-gradient(from 210deg, var(--gold), var(--violet), var(--emerald), var(--gold));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 14px -2px rgba(212, 168, 83, 0.35);
+}
+.storyAddBadge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--gold-soft);
+  color: #07080c;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--void);
+}
+.storyRing.seen {
+  background: var(--panel-3);
+  box-shadow: none;
+}
+.storyAvatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(155deg, var(--panel-3), var(--panel-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--gold-soft);
+  border: 2px solid var(--void);
+}
+.storyAdd .storyRing {
+  background: var(--panel-2);
+  border: 1px dashed rgba(212, 168, 83, 0.5);
+  box-shadow: none;
+}
+.storyAdd .storyAvatar {
+  background: transparent;
+  color: var(--gold-soft);
+  font-size: 20px;
+  font-weight: 400;
+}
+.storyName {
+  font-size: 10px;
+  color: var(--text-mid);
+  max-width: 60px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.viewerBars {
+  display: flex;
+  gap: 4px;
+  padding: 10px 10px 0;
+}
+.barTrack {
+  flex: 1;
+  height: 2.5px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+.barFill {
+  height: 100%;
+  width: 0%;
+  background: #fff;
+  border-radius: 2px;
+}
+.viewerHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.viewerInfo {
+  flex: 1;
+  min-width: 0;
+}
+.viewerName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+.viewerTime {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.viewerClose {
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.viewerClose svg {
+  width: 20px;
+  height: 20px;
+}
+.viewerContent {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0 12px 12px;
+}
+.viewerContent img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 14px;
+}
+.textCard {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 28px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.viewerNav {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  z-index: 1;
+}
+.viewerNavZone {
+  flex: 1;
+  height: 100%;
+}
+.viewerViewCount {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  padding: 0 0 16px;
+}
+.avatarSm {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--void);
+}
+
+.storyTypeBtn.active {
+  background: rgba(212, 168, 83, 0.14);
+  color: var(--gold-soft);
+  border-color: rgba(212, 168, 83, 0.4);
+}
+.colorSwatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+.colorSwatch.active {
+  border-color: var(--text-hi);
+}

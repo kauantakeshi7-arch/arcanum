@@ -2,17 +2,29 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AppShell } from './AppShell';
+import { SessionProvider } from '../../context/SessionContext';
+import { AgoraDataProvider } from '../../context/AgoraDataContext';
+import { ModalProvider } from '../modal/ModalProvider';
 
+// AppShell renderiza <Stories /> (usa useSession/useAgoraData) e o sino de
+// notificações (usa useModal) — sem sessão, os dados da Ágora ficam vazios e
+// nenhuma chamada de rede é feita (ver AgoraDataContext: só busca com userId).
 function renderShell(initialPath = '/') {
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <Routes>
-        <Route path="/" element={<AppShell />}>
-          <Route index element={<div>Conteúdo da Ágora</div>} />
-          <Route path="covens" element={<div>Conteúdo de Covens</div>} />
-        </Route>
-      </Routes>
-    </MemoryRouter>,
+    <SessionProvider>
+      <ModalProvider>
+        <AgoraDataProvider>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <Routes>
+              <Route path="/" element={<AppShell />}>
+                <Route index element={<div>Conteúdo da Ágora</div>} />
+                <Route path="covens" element={<div>Conteúdo de Covens</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        </AgoraDataProvider>
+      </ModalProvider>
+    </SessionProvider>,
   );
 }
 

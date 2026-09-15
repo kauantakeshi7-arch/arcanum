@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import { SideNav } from './SideNav';
 import { BottomNav } from './BottomNav';
 import { RightPanel } from './RightPanel';
+import { Stories } from '../../features/agora/Stories';
 import { useModal } from '../modal/ModalProvider';
 import styles from './AppShell.module.css';
 
@@ -65,6 +66,8 @@ export function AppShell() {
             </button>
           </div>
         </div>
+
+        <Stories />
 
         <div className={styles.screens}>
           <Outlet />
