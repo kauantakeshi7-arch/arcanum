@@ -10,6 +10,7 @@ interface SessionContextValue {
   loading: boolean;
   refreshProfile: () => Promise<void>;
   adjustManaXp: (delta: number) => void;
+  patchProfileLocal: (patch: Partial<Profile>) => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -69,8 +70,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setProfile((prev) => (prev ? { ...prev, mana_xp: prev.mana_xp + delta } : prev));
   }
 
+  // Idem, genérico — usado pela Chama Sagrada (streak_days/logged_today_at)
+  // depois que a escrita real no Supabase já foi disparada.
+  function patchProfileLocal(patch: Partial<Profile>) {
+    setProfile((prev) => (prev ? { ...prev, ...patch } : prev));
+  }
+
   return (
-    <SessionContext.Provider value={{ session, profile, loading, refreshProfile, adjustManaXp }}>
+    <SessionContext.Provider value={{ session, profile, loading, refreshProfile, adjustManaXp, patchProfileLocal }}>
       {children}
     </SessionContext.Provider>
   );

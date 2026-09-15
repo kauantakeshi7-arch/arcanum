@@ -1,0 +1,282 @@
+/* Portado de index.html:548-641, 846-850 (Santuário: altar, swatches, streak,
+   oráculo, sigilos, alquimia, glossário) */
+.screen {
+  padding: 16px 16px 100px;
+}
+.altarScene {
+  position: relative;
+  height: 210px;
+  border-radius: 18px;
+  margin-bottom: 14px;
+  background: radial-gradient(ellipse at 50% 100%, rgba(212, 168, 83, 0.14), transparent 65%),
+    radial-gradient(ellipse 200px 120px at 85% 10%, rgba(139, 108, 242, 0.14), transparent 70%), var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: 0 0 0 1px rgba(212, 168, 83, 0.05) inset, 0 14px 34px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+.flameFlicker {
+  transform-origin: 154px 148px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .flameFlicker {
+    animation: flicker 2.4s ease-in-out infinite;
+  }
+  .smokeP {
+    animation: smoke-rise 3.6s ease-in infinite;
+  }
+}
+@keyframes flicker {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.05, 0.96) rotate(-2deg);
+  }
+  50% {
+    transform: scale(0.95, 1.05) rotate(1deg);
+  }
+  75% {
+    transform: scale(1.03, 0.98) rotate(2deg);
+  }
+}
+@keyframes smoke-rise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-70px) scale(2.2);
+    opacity: 0;
+  }
+}
+
+.swatches {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-left: 2px;
+}
+.swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.swatch.active {
+  border-color: var(--text-hi);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08), 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.streakRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(212, 168, 83, 0.1), var(--panel));
+  border: 1px solid var(--line);
+}
+.streakFlame {
+  font-size: 22px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(212, 168, 83, 0.28), transparent 70%);
+}
+.streakNum {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gold-soft);
+}
+.streakLabel {
+  font-size: 11.5px;
+  color: var(--text-low);
+}
+
+.oracleFlipWrap {
+  perspective: 1000px;
+  margin-bottom: 6px;
+}
+.oracleFlip {
+  position: relative;
+  height: 170px;
+  border-radius: 16px;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+.oracleFlip.flipped {
+  transform: rotateY(180deg);
+}
+.oracleFace {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3);
+}
+.oracleFront {
+  background: linear-gradient(155deg, var(--panel-3), var(--panel));
+}
+.oracleBack {
+  background: linear-gradient(155deg, rgba(139, 108, 242, 0.2), rgba(212, 168, 83, 0.12)), var(--panel);
+  border-color: rgba(212, 168, 83, 0.35);
+  transform: rotateY(180deg);
+}
+
+.sigilTools {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(175deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.sigilCanvas {
+  width: 100%;
+  height: 180px;
+  border-radius: 12px;
+  background: var(--void);
+  border: 1px solid var(--line);
+  touch-action: none;
+  display: block;
+}
+.sigilActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.alchemyLab {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(175deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.alchemyResult {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(212, 168, 83, 0.06);
+  border: 1px solid rgba(212, 168, 83, 0.25);
+}
+.alchemyResultTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gold-soft);
+  margin-bottom: 8px;
+}
+.alchemyRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 12.5px;
+}
+.alchemyRow:last-of-type {
+  border-bottom: none;
+}
+.alchemyRow span {
+  color: var(--text-low);
+  flex-shrink: 0;
+}
+.alchemyRow b {
+  color: var(--text-hi);
+  font-weight: 600;
+  text-align: right;
+}
+
+.glossaryList {
+  max-height: 280px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.glossaryItem {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.glossaryTerm {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-hi);
+  margin-bottom: 3px;
+}
+.glossaryCat {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--gold-soft);
+  margin-left: 4px;
+}
+.glossaryDesc {
+  font-size: 11.5px;
+  color: var(--text-mid);
+  line-height: 1.45;
+}
+
+.grimEntry {
+  padding: 12px 0 12px 12px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--line-soft);
+  border-left: 2px solid var(--grim-c, var(--line));
+  border-radius: 0 8px 8px 0;
+}
+.grimTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.grimType {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  text-transform: lowercase;
+}
+.grimDate {
+  font-size: 10.5px;
+  color: var(--text-low);
+  margin-left: auto;
+}
+.grimTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-hi);
+  margin-bottom: 2px;
+}
+.grimSnippet {
+  font-size: 12px;
+  color: var(--text-mid);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}

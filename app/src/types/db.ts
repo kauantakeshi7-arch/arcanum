@@ -10,6 +10,7 @@ export interface Profile {
   religion_path: string;
   mana_xp: number;
   streak_days: number;
+  logged_today_at: string | null;
   is_verified: boolean;
   referred_by: string | null;
   created_at: string;

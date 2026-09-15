@@ -54,3 +54,8 @@ export function relativeTime(iso: string): string {
   if (hours < 24) return `há ${hours}h`;
   return `há ${Math.floor(hours / 24)}d`;
 }
+
+// Porte de index.html:4835-4837 (shortDate).
+export function shortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
