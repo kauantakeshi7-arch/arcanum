@@ -1,0 +1,15 @@
+/* Portado de index.html:834 (.sacred-map-container) */
+.mapContainer {
+  height: 260px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+.pickerMap {
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}

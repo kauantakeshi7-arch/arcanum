@@ -2,16 +2,19 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import * as api from '../lib/api';
 import { shortDate } from '../lib/constants';
 import { useSession } from './SessionContext';
-import type { CandleViewModel, GratitudeViewModel } from '../types/egregora';
+import type { CandleViewModel, GratitudeViewModel, SacredPlace } from '../types/egregora';
+import type { CreateSacredPlaceParams } from '../lib/api';
 
 interface EgregoraDataContextValue {
   loading: boolean;
   candles: CandleViewModel[];
   gratitude: GratitudeViewModel[];
+  sacredPlaces: SacredPlace[];
   lightCandle: (candleId: string) => Promise<void>;
   addCandle: (intention: string) => Promise<void>;
   sendFlower: (testimonialId: string) => Promise<void>;
   addGratitude: (guideName: string, testimony: string) => Promise<void>;
+  addSacredPlace: (params: Omit<CreateSacredPlaceParams, 'createdBy'>) => Promise<void>;
 }
 
 const EgregoraDataContext = createContext<EgregoraDataContextValue | null>(null);
@@ -23,6 +26,7 @@ export function EgregoraDataProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [candles, setCandles] = useState<CandleViewModel[]>([]);
   const [gratitude, setGratitude] = useState<GratitudeViewModel[]>([]);
+  const [sacredPlaces, setSacredPlaces] = useState<SacredPlace[]>([]);
 
   useEffect(() => {
     if (!userId) return;
@@ -33,8 +37,9 @@ export function EgregoraDataProvider({ children }: { children: ReactNode }) {
       api.fetchMyLitCandleIds(userId),
       api.fetchGratitude(),
       api.fetchMyFlowerIds(userId),
+      api.fetchSacredPlaces(),
     ])
-      .then(([candleRows, myLights, gratRows, myFlowers]) => {
+      .then(([candleRows, myLights, gratRows, myFlowers, placeRows]) => {
         if (!active) return;
         setCandles(
           (candleRows as unknown as Array<{ id: string; user_id: string; intention: string; lights_count: number; profiles?: { display_name: string } }>).map(
@@ -59,6 +64,21 @@ export function EgregoraDataProvider({ children }: { children: ReactNode }) {
               flowers: r.flowers_count,
               sent: myFlowers.has(r.id),
               date: shortDate(r.created_at),
+            }),
+          ),
+        );
+        setSacredPlaces(
+          (placeRows as unknown as Array<{ id: string; name: string; category: string; address: string; city: string; latitude: number; longitude: number; phone: string | null; created_by: string }>).map(
+            (r) => ({
+              id: r.id,
+              name: r.name,
+              category: r.category,
+              address: r.address,
+              city: r.city,
+              latitude: r.latitude,
+              longitude: r.longitude,
+              phone: r.phone,
+              createdBy: r.created_by,
             }),
           ),
         );
@@ -133,9 +153,31 @@ export function EgregoraDataProvider({ children }: { children: ReactNode }) {
     [userId, profile],
   );
 
+  const addSacredPlace = useCallback(
+    async (params: Omit<CreateSacredPlaceParams, 'createdBy'>) => {
+      if (!userId) return;
+      const row = await api.createSacredPlace({ ...params, createdBy: userId });
+      setSacredPlaces((prev) => [
+        {
+          id: row.id,
+          name: row.name,
+          category: row.category,
+          address: row.address,
+          city: row.city,
+          latitude: row.latitude,
+          longitude: row.longitude,
+          phone: row.phone,
+          createdBy: userId,
+        },
+        ...prev,
+      ]);
+    },
+    [userId],
+  );
+
   return (
     <EgregoraDataContext.Provider
-      value={{ loading, candles, gratitude, lightCandle, addCandle, sendFlower, addGratitude }}
+      value={{ loading, candles, gratitude, sacredPlaces, lightCandle, addCandle, sendFlower, addGratitude, addSacredPlace }}
     >
       {children}
     </EgregoraDataContext.Provider>

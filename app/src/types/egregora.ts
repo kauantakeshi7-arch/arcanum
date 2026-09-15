@@ -35,3 +35,16 @@ export interface MarketItem {
   price: string;
   color: string;
 }
+
+export interface SacredPlace {
+  id: string;
+  name: string;
+  category: string;
+  address: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  phone: string | null;
+  createdBy: string;
+}
+

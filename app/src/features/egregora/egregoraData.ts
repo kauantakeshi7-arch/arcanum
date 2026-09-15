@@ -73,6 +73,17 @@ export function drawVeilResponse(category: string): string {
 // alguns dias" no app original (não calcula a fase real de verdade).
 export const MOON_TARGET_DATE = new Date(Date.now() + 1000 * 60 * 60 * 24 * 6 + 1000 * 60 * 60 * 7);
 
+// Porte de index.html:2801-2808 (SACRED_CATEGORIES/SACRED_MAP_DEFAULT_CENTER).
+export const SACRED_CATEGORIES: Record<string, { glyph: string; label: string }> = {
+  loja: { glyph: '🏪', label: 'Loja Esotérica' },
+  ervanaria: { glyph: '🌿', label: 'Ervanária' },
+  terreiro: { glyph: '🥁', label: 'Terreiro' },
+  templo: { glyph: '⛩️', label: 'Templo' },
+  livraria: { glyph: '📚', label: 'Livraria' },
+};
+
+export const SACRED_MAP_DEFAULT_CENTER: [number, number] = [-23.5505, -46.6333];
+
 export function moonCountdownStr(): string {
   const diff = MOON_TARGET_DATE.getTime() - Date.now();
   if (diff <= 0) return '00:00:00';
